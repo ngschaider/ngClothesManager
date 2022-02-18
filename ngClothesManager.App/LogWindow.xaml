@@ -1,0 +1,26 @@
+﻿<Window x:Class="ngClothesManager.App.LogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ngClothesManager.App"
+        mc:Ignorable="d"
+        Title="LogWindow" Height="600" Width="450">
+
+    <ListView ItemsSource="{x:Static local:Logger.Entries}">
+        <!--<ListView.ItemTemplate>
+            <DataTemplate>
+                <StackPanel>
+                    <TextBlock Text="{Binding Index}" />
+                    <TextBlock Text="{Binding Message}" />
+                </StackPanel>
+            </DataTemplate>
+        </ListView.ItemTemplate>-->
+        <ListView.View>
+            <GridView>
+                <GridViewColumn Header="Index" Width="80" DisplayMemberBinding="{Binding Index}" />
+                <GridViewColumn Header="Message" DisplayMemberBinding="{Binding Message}" />
+            </GridView>
+        </ListView.View>
+    </ListView>
+</Window>
