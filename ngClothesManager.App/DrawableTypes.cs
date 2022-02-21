@@ -25,6 +25,7 @@
         PropRFoot,
         PropUnk1,
         PropUnk2,
-        Invalid,
+        Unkown,
+        None
     }
 }

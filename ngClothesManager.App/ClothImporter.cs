@@ -15,14 +15,14 @@ namespace ngClothesManager.App {
         }
 
         public void Import(string filePath, Sex sex) {
+            
             string fileName = Path.GetFileName(filePath);
 
             string baseName = Path.GetFileNameWithoutExtension(filePath);
 
             // FiveM Naming Convention
-            if(baseName.Contains("^")) {
-                baseName = baseName.Split('^')[1];
-            }
+            string prefix = baseName.Contains("^") ? baseName.Split('^')[0] + "^" : "";
+            baseName = baseName.Contains("^") ? baseName.Split('^')[1] : baseName;
 
             string[] parts = baseName.Split('_');
 
@@ -52,7 +52,7 @@ namespace ngClothesManager.App {
             project.AddFile(filePath, cloth.DrawableType.ToIdentifier() + "/" + cloth.Index + "/model.ydd");
 
 
-            List<string> texturePaths = SearchForTextures(filePath, originalNumber, cloth);
+            List<string> texturePaths = SearchForTextures(filePath, originalNumber, prefix, cloth);
 
             TextureImporter importer = new TextureImporter(project, cloth);
             foreach(string texturePath in texturePaths) {
@@ -82,7 +82,7 @@ namespace ngClothesManager.App {
             return File.Exists(relPath) ? relPath : "";
         }*/
 
-        public List<string> SearchForTextures(string filePath, int offsetNumber, Cloth cloth) {
+        public List<string> SearchForTextures(string filePath, int offsetNumber, string prefix, Cloth cloth) {
             List<string> texturePaths = new List<string>();
 
             string rootPath = Path.GetDirectoryName(filePath);
@@ -91,8 +91,8 @@ namespace ngClothesManager.App {
 
             string paddedNumber = offsetNumber.ToString().PadLeft(3, '0');
 
-            string searchPattern = "*" + cloth.DrawableType.ToIdentifier() + "_diff_" + paddedNumber + "_*.ytd";
-            Logger.Log("Seraching textures using search pattern" + searchPattern);
+            string searchPattern = prefix + cloth.DrawableType.ToIdentifier() + "_diff_" + paddedNumber + "_*.ytd";
+            Logger.Log("Seraching textures using search pattern " + searchPattern);
             foreach(FileInfo file in dir.GetFiles(searchPattern)) {
                 texturePaths.Add(file.FullName);
             }

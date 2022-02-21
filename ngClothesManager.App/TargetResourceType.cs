@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace ngClothesManager.App {
-    public enum TargetResourceType {
+    public enum ResourceType {
         AltV,
         Single,
         FiveM

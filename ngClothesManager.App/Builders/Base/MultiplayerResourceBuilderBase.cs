@@ -1,130 +1,117 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using RageLib.GTA5.ResourceWrappers.PC.Meta.Structures;
 using RageLib.Resources.GTA5.PC.GameFiles;
 using RageLib.Resources.GTA5.PC.Meta;
 
 namespace ngClothesManager.App.Builders.Base {
-    internal abstract class MultiplayerResourceBuilderBase
-        : ResourceBuilderBase {
-        public override void BuildResource(Project project, string outputFolder, string collectionName) {
-            OnResourceBuildingStarted(outputFolder);
+    internal abstract class MultiplayerResourceBuilderBase : ResourceBuilderBase {
 
-            for(int sexNr = 0; sexNr < 2; ++sexNr) {
-                YmtPedDefinitionFile ymt = CreateYmtPedDefinitionFile(Prefixes[sexNr] + collectionName,
-                    out var componentTextureBindings,
-                    out var componentIndexes,
-                    out var propIndexes);
+        public MultiplayerResourceBuilderBase(Project project, string outputFolder) : base(project, outputFolder) {
 
-                bool isAnyClothAdded = false;
+        }
+
+        public override void BuildResource() {
+            OnResourceBuildingStarted();
+
+            foreach(Sex sex in new Sex[] { Sex.Male, Sex.Female }) {
+                string ymtName = sex.ToPrefix() + OutputName;
+                YmtPedDefinitionFile ymt = CreateYmtPedDefinitionFile(ymtName, out var componentTextureBindings, out int[] componentIndexes, out int[] propIndexes);
+
+                bool isAnyComponentAdded = false;
                 bool isAnyPropAdded = false;
 
-                foreach(Cloth cloth in project.Clothes) {
+                foreach(Cloth cloth in project.Clothes.Where(cloth => cloth.TargetSex == sex)) {
                     if(cloth.IsComponent) {
-                        if(cloth.Textures.Count <= 0 || (int)cloth.TargetSex != sexNr)
+                        if(cloth.Textures.Count <= 0) {
                             continue;
-
-                        var componentItemInfo = GenerateYmtPedComponentItem(cloth, ref componentTextureBindings);
+                        }
+                            
+                        MCComponentInfo componentItemInfo = GenerateYmtPedComponentItem(cloth, ref componentTextureBindings);
                         ymt.Unk_376833625.CompInfos.Add(componentItemInfo);
 
                         var componentTypeId = componentItemInfo.Unk_3509540765;
-                        GetClothSuffixes(cloth, out var ytdPostfix, out var yddPostfix);
+                        GetClothSuffixes(cloth, out var ytdSuffix, out var yddSuffix);
 
-                        if(!isAnyClothAdded) {
-                            isAnyClothAdded = true;
-                            OnFirstClothAddedToResource(outputFolder, sexNr, collectionName);
+                        if(!isAnyComponentAdded) {
+                            isAnyComponentAdded = true;
+                            OnFirstClothAddedToResource(sex);
                         }
 
                         int currentComponentIndex = componentIndexes[componentTypeId]++;
 
                         string componentNumerics = currentComponentIndex.ToString().PadLeft(3, '0');
-                        string prefix = cloth.Prefix;
 
-                        //clothData.SetComponentNumerics(componentNumerics, currentComponentIndex);
-
-                        CopyClothModelToResource(cloth, sexNr, outputFolder, collectionName, componentNumerics, prefix, yddPostfix);
+                        CopyClothModelToResource(cloth, sex, componentNumerics, yddSuffix);
 
                         foreach(Texture texture in cloth.Textures) {
-                            CopyClothTextureToResource(cloth.GetTexturePath(texture.Index), sexNr, outputFolder, collectionName, componentNumerics, prefix, ytdPostfix, Utils.NumberToLetter(texture.Index));
+                            CopyClothTextureToResource(cloth, texture, sex, componentNumerics, ytdSuffix, Utils.NumberToLetter(texture.Index));
+                        }
+                    } else {
+                        if(cloth.Textures.Count <= 0) {
+                            continue;
                         }
 
-                        /*if(!string.IsNullOrEmpty(clothData.FirstPersonModelPath)) {
-                            CopyClothFirstPersonModelToResource(clothData.FirstPersonModelPath, sexNr, outputFolder, collectionName, componentNumerics, prefix, yddPostfix);
-                        }*/
-                    } else {
-                        if(cloth.Textures.Count <= 0 || (int)cloth.TargetSex != sexNr)
-                            continue;
-
                         Unk_2834549053 anchor = (Unk_2834549053)cloth.PedPropTypeId;
-                        var defs = ymt.Unk_376833625.PropInfo.Props[anchor] ?? new List<MUnk_94549140>();
-                        var item = GenerateYmtPedPropItem(ymt, anchor, cloth);
+                        List<MUnk_94549140> defs = ymt.Unk_376833625.PropInfo.Props[anchor] ?? new List<MUnk_94549140>();
+                        MUnk_94549140 item = GenerateYmtPedPropItem(ymt, anchor, cloth);
                         defs.Add(item);
 
                         if(!isAnyPropAdded) {
                             isAnyPropAdded = true;
-                            OnFirstPropAddedToResource(outputFolder, sexNr, collectionName);
+                            OnFirstPropAddedToResource(sex);
                         }
 
                         int currentPropIndex = propIndexes[(byte)anchor]++;
-
                         string componentNumerics = currentPropIndex.ToString().PadLeft(3, '0');
-                        string prefix = cloth.Prefix;
 
-                        //cloth.SetComponentNumerics(componentNumerics, currentPropIndex);
-
-                        CopyPropModelToResource(cloth, sexNr, outputFolder, collectionName, componentNumerics, prefix);
+                        CopyPropModelToResource(cloth, sex, componentNumerics);
 
                         foreach(Texture texture in cloth.Textures) {
-                            CopyPropTextureToResource(cloth.GetTexturePath(texture.Index), sexNr, outputFolder, collectionName, componentNumerics, prefix, Utils.NumberToLetter(texture.Index));
+                            CopyPropTextureToResource(cloth, texture, sex, componentNumerics, Utils.NumberToLetter(texture.Index));
                         }
                     }
                 }
 
-                if(isAnyClothAdded) {
+                if(isAnyComponentAdded) {
                     UpdateYmtComponentTextureBindings(componentTextureBindings, ymt);
-                    var clothYmtFilePath = GetClothYmtFilePath(outputFolder, sexNr, collectionName);
+                    string clothYmtFilePath = GetClothYmtFilePath(sex);
                     ymt.Save(clothYmtFilePath);
                 }
 
-                OnResourceClothDataFinished(outputFolder, sexNr, collectionName, isAnyClothAdded, isAnyPropAdded);
+                OnResourceClothDataFinished(sex, isAnyComponentAdded, isAnyPropAdded);
             }
 
-            OnResourceBuildingFinished(outputFolder);
+            OnResourceBuildingFinished();
         }
 
-        protected abstract string GetClothYmtFilePath(string outputFolder, int sexNr, string collectionName);
+        protected abstract string GetClothYmtFilePath(Sex sex);
 
-        protected abstract void CopyPropTextureToResource(string propTextureFilePath, int sexNr, string outputFolder,
-            string collectionName, string componentNumerics, string prefix, char offsetLetter);
+        protected abstract void CopyPropTextureToResource(Cloth cloth, Texture texture, Sex sex, string componentNumerics, char offsetLetter);
 
-        protected abstract void CopyPropModelToResource(Cloth propClothData, int sexNr, string outputFolder,
-            string collectionName, string componentNumerics, string prefix);
+        protected abstract void CopyPropModelToResource(Cloth cloth, Sex sex, string componentNumerics);
 
-        protected abstract void CopyClothFirstPersonModelToResource(string clothDataFirstPersonModelPath, int sexNr,
-            string outputFolder, string collectionName, string componentNumerics, string prefix, string yddPostfix);
+        protected abstract void CopyClothTextureToResource(Cloth cloth, Texture texture, Sex sex, string componentNumerics, string ytdSuffix, char offsetLetter);
 
-        protected abstract void CopyClothTextureToResource(string clothTextureFilePath, int sexNr, string outputFolder,
-            string collectionName, string componentNumerics, string prefix, string ytdPostfix, char offsetLetter);
+        protected abstract void CopyClothModelToResource(Cloth cloth, Sex sex, string componentNumerics, string yddSuffix);
 
-        protected abstract void CopyClothModelToResource(Cloth clothData, int sexNr, string outputFolder,
-            string collectionName, string componentNumerics, string prefix, string yddPostfix);
-
-        protected virtual void OnResourceClothDataFinished(string outputFolder, int sexNr, string collectionName, bool isAnyClothAdded, bool isAnyPropAdded) {
+        protected virtual void OnResourceClothDataFinished(Sex sex, bool isAnyClothAdded, bool isAnyPropAdded) {
 
         }
 
-        protected virtual void OnFirstPropAddedToResource(string outputFolder, int sexNr, string collectionName) {
+        protected virtual void OnFirstPropAddedToResource(Sex sex) {
 
         }
 
-        protected virtual void OnFirstClothAddedToResource(string outputFolder, int sexNr, string collectionName) {
+        protected virtual void OnFirstClothAddedToResource(Sex sex) {
 
         }
 
-        protected virtual void OnResourceBuildingStarted(string outputFolder) {
+        protected virtual void OnResourceBuildingStarted() {
 
         }
 
-        protected virtual void OnResourceBuildingFinished(string outputFolder) {
+        protected virtual void OnResourceBuildingFinished() {
 
         }
     }

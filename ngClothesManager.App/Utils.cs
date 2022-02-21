@@ -36,7 +36,40 @@ namespace ngClothesManager.App {
         public static char NumberToLetter(int number) {
             return (char)('a' + number);
         }
+
+        public static bool IsFileEqual(string path1, string path2) {
+            using(var reader1 = new System.IO.FileStream(path1, System.IO.FileMode.Open, System.IO.FileAccess.Read)) {
+                using(var reader2 = new System.IO.FileStream(path2, System.IO.FileMode.Open, System.IO.FileAccess.Read)) {
+                    byte[] hash1;
+                    byte[] hash2;
+
+                    using(var md51 = new System.Security.Cryptography.MD5CryptoServiceProvider()) {
+                        md51.ComputeHash(reader1);
+                        hash1 = md51.Hash;
+                    }
+
+                    using(var md52 = new System.Security.Cryptography.MD5CryptoServiceProvider()) {
+                        md52.ComputeHash(reader2);
+                        hash2 = md52.Hash;
+                    }
+
+                    int j = 0;
+                    for(j = 0; j < hash1.Length; j++) {
+                        if(hash1[j] != hash2[j]) {
+                            break;
+                        }
+                    }
+
+                    if(j == hash1.Length) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            }
+        }
+
     }
 
-    
+
 }

@@ -32,7 +32,6 @@ namespace ngClothesManager.App {
 			}
 		}
 
-
 		public event PropertyChangedEventHandler PropertyChanged;
 
 		public void OnPropertyChanged(string memberName) {

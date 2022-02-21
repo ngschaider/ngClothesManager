@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 namespace ngClothesManager.App {
     public enum Sex {
         Male,
-        Female
+        Female,
+        Both,
+        None
     }
 }

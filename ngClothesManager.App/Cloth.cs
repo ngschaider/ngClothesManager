@@ -87,9 +87,45 @@ namespace ngClothesManager.App {
             }
         }
 
-        public Sex TargetSex {
-            get; set;
+        private bool _isMale;
+
+        public bool IsMale {
+            get {
+                return _isMale;
+            }
+            set {
+                _isMale = value;
+                OnPropertyChanged(nameof(IsMale));
+                OnPropertyChanged(nameof(TargetSex));
+            }
         }
+
+        private bool _isFemale;
+
+        public bool IsFemale {
+            get {
+                return _isFemale;
+            }
+            set {
+                _isFemale = value;
+                OnPropertyChanged(nameof(IsFemale));
+                OnPropertyChanged(nameof(TargetSex));
+            }
+        }
+
+        public Sex TargetSex {
+            get {
+                return (IsFemale && IsMale) ? Sex.Both : (IsFemale ? Sex.Female : Sex.Male);
+            }
+            set {
+                IsMale = value == Sex.Male || value == Sex.Both;
+                IsFemale = value == Sex.Female || value == Sex.Both;
+                OnPropertyChanged(nameof(TargetSex));
+                OnPropertyChanged(nameof(IsMale));
+                OnPropertyChanged(nameof(IsFemale));
+            }
+        }
+
 
         /*public string Icon {
             get {
@@ -121,7 +157,9 @@ namespace ngClothesManager.App {
 
         public string DisplayName {
             get {
-                return Name + " (ID: " + Index + ") (" + DrawableType + ")";
+                string sexPrefix = (IsMale ? "M" : "") + (IsFemale ? "F" : "");
+                sexPrefix += (sexPrefix.Length > 0 ? " " : "");
+                return sexPrefix + Name + " (ID: " + Index + ") (" + DrawableType.ToIdentifier() + ")";
             }
         }
 

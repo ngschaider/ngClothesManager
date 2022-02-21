@@ -10,12 +10,16 @@ using System.Text;
 using Newtonsoft.Json;
 
 namespace ngClothesManager.App {
-    public class Project : IDisposable, INotifyPropertyChanged {
+    public class Project : INotifyPropertyChanged {
 
-        private readonly FileStream fileStream;
-        private readonly ZipArchive zipArchive;
+        public readonly string FolderPath;
+
+        public readonly string Name;
 
         private ObservableCollection<Cloth> _clothes = new ObservableCollection<Cloth>();
+
+        private readonly List<string> filesToDelete = new List<string>();
+        private readonly List<string> directoriesToDelete = new List<string>();
 
         public ObservableCollection<Cloth> Clothes {
             get {
@@ -27,70 +31,89 @@ namespace ngClothesManager.App {
             }
         }
 
-        public Stream OpenEntry(string entryName) {
-            return zipArchive.GetEntry(entryName).Open();
+        private bool _needsSaving;
+
+        public bool NeedsSaving {
+            get {
+                return _needsSaving;
+            }
+            set {
+                _needsSaving = value;
+                OnPropertyChanged(nameof(NeedsSaving));
+            }
+        }
+
+        private string ProjectFilePath {
+            get {
+                return FolderPath + "/" + Name + ".ngcmp";
+            }
         }
 
         private void OnPropertyChanged(string memberName) {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(memberName));
         }
 
-        private Project(string filePath) {
-            fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 4096, FileOptions.None);
-            //fileStream = File.Open(filePath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
-            zipArchive = new ZipArchive(fileStream, ZipArchiveMode.Update, false, Encoding.UTF8);
+        private Project(string name, string folderPath) {
+            this.Name = name;
+            this.FolderPath = folderPath;
 
-            ZipArchiveEntry entry = zipArchive.GetEntry("data.json");
-            if(entry == null) {
-                entry = zipArchive.CreateEntry("data.json");
-            }
-
-            using(Stream stream = entry.Open()) {
-                using(StreamReader reader = new StreamReader(stream)) {
+            using(FileStream fileStream = File.OpenRead(ProjectFilePath)) {
+                using(StreamReader reader = new StreamReader(fileStream)) {
                     string clothDatasText = reader.ReadToEnd();
 
-                    List<Cloth> list = JsonConvert.DeserializeObject<List<Cloth>>(clothDatasText, new JsonSerializerSettings() {
-                        ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
-                    });
+                    if(clothDatasText?.Length > 0) {
+                        List<Cloth> list = JsonConvert.DeserializeObject<List<Cloth>>(clothDatasText, new JsonSerializerSettings() {
+                            ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
+                        });
 
-                    if(list != null) {
                         Clothes = new ObservableCollection<Cloth>(list);
-                    } else {
-                        Clothes = new ObservableCollection<Cloth>();
                     }
                 }
             }
         }
 
         public void Save() {
+            foreach(string relPath in filesToDelete) {
+                File.Delete(FolderPath + "/" + relPath);
+            }
+            filesToDelete.Clear();
+
+            foreach(string relPath in directoriesToDelete) {
+                Directory.Delete(FolderPath + "/" + relPath, true);
+            }
+            directoriesToDelete.Clear();
+
             string text = JsonConvert.SerializeObject(Clothes);
 
-            using(Stream stream = zipArchive.GetEntry("data.json").Open()) {
-                using(StreamWriter writer = new StreamWriter(stream)) {
+            using(FileStream fileStream = File.Open(ProjectFilePath, FileMode.Create)) {
+                using(StreamWriter writer = new StreamWriter(fileStream)) {
                     writer.Write(text);
                 }
             }
 
+            NeedsSaving = false;
             Logger.Log("Project saved.");
         }
 
-        public static Project Create(string filePath) {
-            Project project = new Project(filePath);
+        public static Project Create(string name, string path) {
+            string projectFolder = path + "/" + name;
+            string projectFile = projectFolder + "/" + name + ".ngcmp";
+            Directory.CreateDirectory(projectFolder);
+            File.Create(projectFile).Dispose();
+
+            Project project = Open(projectFile);
             Logger.Log("Project created.");
 
             return project;
         }
 
         public static Project Open(string filePath) {
-            Project project = new Project(filePath);
+            FileInfo info = new FileInfo(filePath);
+            string name = Path.GetFileNameWithoutExtension(info.Name);
+            Project project = new Project(name, info.Directory.FullName);
             Logger.Log("Project loaded. Total clothes: " + project.Clothes.Count);
 
             return project;
-        }
-
-        public void Dispose() {
-            zipArchive.Dispose();
-            fileStream.Dispose();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -105,40 +128,33 @@ namespace ngClothesManager.App {
             }
         }
 
-        public void AddFile(string sourcePath, string targetPath) {
-            if(zipArchive.Entries.FirstOrDefault(entry => entry.FullName == targetPath) != null) {
-                return;
-            }
-
-            Logger.Log("Adding file " + sourcePath + " to " + targetPath);
-            using(Stream stream = zipArchive.CreateEntry(targetPath).Open()) {
-                using(FileStream fileStream = File.OpenRead(sourcePath)) {
-                    fileStream.CopyTo(stream);
-                }
-            }
+        public void AddFile(string sourcePath, string relTargetPath) {
+            NeedsSaving = true;
+            string targetPath = FolderPath + "/" + relTargetPath;
+            FileInfo fileInfo = new FileInfo(targetPath);
+            fileInfo.Directory.Create(); // create all needed folders
+            File.Copy(sourcePath, targetPath, true);
         }
 
-        public void RemoveFile(string path) {
-            ZipArchiveEntry entry = zipArchive.Entries.FirstOrDefault(e => e.FullName == path);
-            if(entry == null) {
-                return;
-            }
+        public void RemoveFile(string relPath) {
+            NeedsSaving = true;
+            filesToDelete.Add(relPath);
+        }
 
-            entry.Delete();
+        public bool FileExists(string relPath) {
+            return File.Exists(FolderPath + "/" + relPath);
         }
 
         public void RemoveCloth(Cloth cloth) {
+            NeedsSaving = true;
             Clothes.Remove(cloth);
 
-            ZipArchiveEntry[] entries = zipArchive.Entries.Where(entry => entry.FullName.StartsWith(cloth.DrawableType.ToIdentifier() + "/" + cloth.Index + "/")).ToArray();
-            foreach(ZipArchiveEntry entry in entries) {
-                entry.Delete();
-            }
-
+            directoriesToDelete.Add(cloth.DrawableType.ToIdentifier() + "/" + cloth.Index);
             Logger.Log("Removed " + cloth.Name + ". Total clothes: " + Clothes.Count);
         }
 
         public void RemoveTexture(Cloth cloth, Texture texture) {
+            NeedsSaving = true;
             cloth.Textures.Remove(texture);
             string texPath = cloth.GetTexturePath(texture.Index);
             RemoveFile(texPath);

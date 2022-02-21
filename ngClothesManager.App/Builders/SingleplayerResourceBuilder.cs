@@ -11,7 +11,12 @@ using RageLib.Resources.GTA5.PC.Meta;
 
 namespace ngClothesManager.App.Builders {
     public class SingleplayerResourceBuilder : ResourceBuilderBase {
-        private string GenerateSingleplayerContentXml(string collectionName, bool hasMale, bool hasFemale, bool hasMaleProps, bool hasFemaleProps) {
+
+        public SingleplayerResourceBuilder(Project project, string outputFolder) : base(project, outputFolder) {
+
+        }
+
+        private string GetSingleplayerContentXml(bool hasMale, bool hasFemale, bool hasMaleProps, bool hasFemaleProps) {
             string str = $@"<?xml version=""1.0"" encoding=""UTF-8""?>
 <CDataFileMgr__ContentsOfDataFileXml>
   <disabledFiles />
@@ -22,14 +27,14 @@ namespace ngClothesManager.App.Builders {
 
             if(hasMale) {
                 str += $@"      <Item>
-      <filename>dlc_{collectionName}:/common/data/mp_m_freemode_01_mp_m_{collectionName}.meta</filename>
+      <filename>dlc_{OutputName}:/common/data/mp_m_freemode_01_mp_m_{OutputName}.meta</filename>
       <fileType>SHOP_PED_APPAREL_META_FILE</fileType>
       <overlay value=""false"" />
       <disabled value=""true"" />
       <persistent value=""false"" />
     </Item>
     <Item>
-      <filename>dlc_{collectionName}:/%PLATFORM%/models/cdimages/{collectionName}_male.rpf</filename>
+      <filename>dlc_{OutputName}:/%PLATFORM%/models/cdimages/{OutputName}_male.rpf</filename>
       <fileType>RPF_FILE</fileType>
       <overlay value=""false"" />
       <disabled value=""true"" />
@@ -40,14 +45,14 @@ namespace ngClothesManager.App.Builders {
 
             if(hasFemale) {
                 str += $@"    <Item>
-      <filename>dlc_{collectionName}:/common/data/mp_f_freemode_01_mp_f_{collectionName}.meta</filename>
+      <filename>dlc_{OutputName}:/common/data/mp_f_freemode_01_mp_f_{OutputName}.meta</filename>
       <fileType>SHOP_PED_APPAREL_META_FILE</fileType>
       <overlay value=""false"" />
       <disabled value=""true"" />
       <persistent value=""false"" />
     </Item>
     <Item>
-      <filename>dlc_{collectionName}:/%PLATFORM%/models/cdimages/{collectionName}_female.rpf</filename>
+      <filename>dlc_{OutputName}:/%PLATFORM%/models/cdimages/{OutputName}_female.rpf</filename>
       <fileType>RPF_FILE</fileType>
       <overlay value=""false"" />
       <disabled value=""true"" />
@@ -58,7 +63,7 @@ namespace ngClothesManager.App.Builders {
 
             if(hasMaleProps) {
                 str += $@"      <Item>
-      <filename>dlc_{collectionName}:/%PLATFORM%/models/cdimages/{collectionName}_male_p.rpf</filename>
+      <filename>dlc_{OutputName}:/%PLATFORM%/models/cdimages/{OutputName}_male_p.rpf</filename>
       <fileType>RPF_FILE</fileType>
       <overlay value=""false"" />
       <disabled value=""true"" />
@@ -69,7 +74,7 @@ namespace ngClothesManager.App.Builders {
 
             if(hasFemaleProps) {
                 str += $@"    <Item>
-      <filename>dlc_{collectionName}:/%PLATFORM%/models/cdimages/{collectionName}_female_p.rpf</filename>
+      <filename>dlc_{OutputName}:/%PLATFORM%/models/cdimages/{OutputName}_female_p.rpf</filename>
       <fileType>RPF_FILE</fileType>
       <overlay value=""false"" />
       <disabled value=""true"" />
@@ -81,28 +86,28 @@ namespace ngClothesManager.App.Builders {
             str += $@"</dataFiles>
   <contentChangeSets>
     <Item>
-      <changeSetName>{collectionName.ToUpper()}_AUTOGEN</changeSetName>
+      <changeSetName>{OutputName.ToUpper()}_AUTOGEN</changeSetName>
       <mapChangeSetData />
       <filesToInvalidate />
       <filesToDisable />
       <filesToEnable>
 ";
             if(hasMale) {
-                str += $"    <Item>dlc_{collectionName}:/common/data/mp_m_freemode_01_mp_m_{collectionName}.meta</Item>\n";
-                str += $"    <Item>dlc_{collectionName}:/%PLATFORM%/models/cdimages/{collectionName}_male.rpf</Item>\n";
+                str += $"    <Item>dlc_{OutputName}:/common/data/mp_m_freemode_01_mp_m_{OutputName}.meta</Item>\n";
+                str += $"    <Item>dlc_{OutputName}:/%PLATFORM%/models/cdimages/{OutputName}_male.rpf</Item>\n";
             }
 
             if(hasFemale) {
-                str += $"    <Item>dlc_{collectionName}:/common/data/mp_f_freemode_01_mp_f_{collectionName}.meta</Item>\n";
-                str += $"    <Item>dlc_{collectionName}:/%PLATFORM%/models/cdimages/{collectionName}_female.rpf</Item>\n";
+                str += $"    <Item>dlc_{OutputName}:/common/data/mp_f_freemode_01_mp_f_{OutputName}.meta</Item>\n";
+                str += $"    <Item>dlc_{OutputName}:/%PLATFORM%/models/cdimages/{OutputName}_female.rpf</Item>\n";
             }
 
             if(hasMaleProps) {
-                str += $"    <Item>dlc_{collectionName}:/%PLATFORM%/models/cdimages/{collectionName}_male_p.rpf</Item>\n";
+                str += $"    <Item>dlc_{OutputName}:/%PLATFORM%/models/cdimages/{OutputName}_male_p.rpf</Item>\n";
             }
 
             if(hasFemaleProps) {
-                str += $"    <Item>dlc_{collectionName}:/%PLATFORM%/models/cdimages/{collectionName}_female_p.rpf</Item>\n";
+                str += $"    <Item>dlc_{OutputName}:/%PLATFORM%/models/cdimages/{OutputName}_female_p.rpf</Item>\n";
             }
 
             str += $@"      </filesToEnable>
@@ -114,19 +119,19 @@ namespace ngClothesManager.App.Builders {
             return str;
         }
 
-        private static string GenerateSingleplayerSetup2Xml(string collectionName) {
+        private string GetSingleplayerSetup2Xml() {
             return $@"<?xml version=""1.0"" encoding=""UTF-8""?>
 <SSetupData>
-    <deviceName>dlc_{collectionName}</deviceName>
+    <deviceName>dlc_{OutputName}</deviceName>
     <datFile>content.xml</datFile>
     <timeStamp>07/07/2077 07:07:07</timeStamp>
-    <nameHash>{collectionName}</nameHash>
+    <nameHash>{OutputName}</nameHash>
     <contentChangeSets />
     <contentChangeSetGroups>
         <Item>
             <NameHash>GROUP_STARTUP</NameHash>
             <ContentChangeSets>
-                <Item>{collectionName.ToUpper()}_AUTOGEN</Item>
+                <Item>{OutputName.ToUpper()}_AUTOGEN</Item>
             </ContentChangeSets>
         </Item>
     </contentChangeSetGroups>
@@ -142,7 +147,7 @@ namespace ngClothesManager.App.Builders {
 </SSetupData>";
         }
 
-        public override void BuildResource(Project project, string outputFolder, string collectionName) {
+        public override void BuildResource() {
             Utils.EnsureKeys();
 
             using(RageArchiveWrapper7 rpf = RageArchiveWrapper7.Create(outputFolder + @"\dlc.rpf")) {
@@ -174,18 +179,15 @@ namespace ngClothesManager.App.Builders {
                 bool hasMaleProps = false;
                 bool hasFemaleProps = false;
 
-                for(int sexNr = 0; sexNr < 2; ++sexNr) {
-                    YmtPedDefinitionFile ymt = CreateYmtPedDefinitionFile(Prefixes[sexNr] + collectionName,
-                        out var componentTextureBindings,
-                        out var componentIndexes,
-                        out var propIndexes);
+                foreach(Sex sex in new Sex[] { Sex.Male, Sex.Female }) {
+                    YmtPedDefinitionFile ymt = CreateYmtPedDefinitionFile(sex.ToPrefix() + OutputName, out var componentTextureBindings, out int[] componentIndexes, out var propIndexes);
 
                     bool isAnyClothAdded = false;
                     bool isAnyPropAdded = false;
 
                     foreach(Cloth cloth in project.Clothes) {
                         if(cloth.IsComponent) {
-                            if(cloth.Textures.Count <= 0 || (int)cloth.TargetSex != sexNr) {
+                            if(cloth.Textures.Count <= 0 || cloth.TargetSex != sex) {
                                 continue;
                             }
 
@@ -200,18 +202,18 @@ namespace ngClothesManager.App.Builders {
 
                                 var ms = new MemoryStream();
 
-                                currComponentRpf = RageArchiveWrapper7.Create(ms, FolderNames[sexNr].Replace("ped_", collectionName + "_") + ".rpf");
+                                string sexStr = sex == Sex.Male ? "male" : "female";
+
+                                currComponentRpf = RageArchiveWrapper7.Create(ms, OutputName + "_" + sexStr + ".rpf");
                                 currComponentRpf.archive_.Encryption = RageArchiveEncryption7.NG;
                                 currComponentDir = currComponentRpf.Root.CreateDirectory();
-                                currComponentDir.Name = Prefixes[sexNr] + "freemode_01_" + Prefixes[sexNr] + collectionName;
+                                currComponentDir.Name = sex.ToPrefix() + "freemode_01_" + sex.ToPrefix() + project.Name;
                             }
 
                             int currentComponentIndex = componentIndexes[componentTypeId]++;
 
                             string componentNumerics = currentComponentIndex.ToString().PadLeft(3, '0');
                             string prefix = cloth.Prefix;
-
-                            //cloth.SetComponentNumerics(componentNumerics, currentComponentIndex);
 
                             var resource = currComponentDir.CreateResourceFile();
                             resource.Name = prefix + "_" + componentNumerics + "_" + yddPostfix + ".ydd";
@@ -222,15 +224,10 @@ namespace ngClothesManager.App.Builders {
                                 resource.Name = prefix + "_diff_" + componentNumerics + "_" + Utils.NumberToLetter(texture.Index) + "_" + ytdPostfix + ".ytd";
                                 resource.Import(cloth.GetTexturePath(texture.Index));
                             }
-
-                            /*if(!string.IsNullOrEmpty(cloth.FirstPersonModelPath)) {
-                                resource = currComponentDir.CreateResourceFile();
-                                resource.Name = prefix + "_" + componentNumerics + "_" + yddPostfix + "_1.ydd";
-                                resource.Import(cloth.FirstPersonModelPath);
-                            }*/
                         } else {
-                            if(cloth.Textures.Count <= 0 || (int)cloth.TargetSex != sexNr)
+                            if(cloth.Textures.Count <= 0 || cloth.TargetSex != sex) {
                                 continue;
+                            }
 
                             Unk_2834549053 anchor = (Unk_2834549053)cloth.PedPropTypeId;
                             var defs = ymt.Unk_376833625.PropInfo.Props[anchor] ?? new List<MUnk_94549140>();
@@ -242,10 +239,10 @@ namespace ngClothesManager.App.Builders {
 
                                 var ms = new MemoryStream();
 
-                                currPropRpf = RageArchiveWrapper7.Create(ms, FolderNames[sexNr].Replace("ped_", collectionName + "_") + "_p.rpf");
+                                currPropRpf = RageArchiveWrapper7.Create(ms, OutputName + "_" + sex.ToString() + "_p.rpf");
                                 currPropRpf.archive_.Encryption = RageArchiveEncryption7.NG;
                                 currPropDir = currPropRpf.Root.CreateDirectory();
-                                currPropDir.Name = Prefixes[sexNr] + "freemode_01_p_" + Prefixes[sexNr] + collectionName;
+                                currPropDir.Name = sex.ToPrefix() + "freemode_01_p_" + sex.ToPrefix() + project.Name;
                             }
 
                             int currentPropIndex = propIndexes[(byte)anchor]++;
@@ -269,52 +266,54 @@ namespace ngClothesManager.App.Builders {
                     }
 
                     if(isAnyClothAdded) {
-                        if(sexNr == 0)
+                        if(sex == Sex.Male) {
                             hasMale = true;
-                        else if(sexNr == 1)
+                        } else if(sex == Sex.Female) {
                             hasFemale = true;
+                        }
 
                         UpdateYmtComponentTextureBindings(componentTextureBindings, ymt);
                     }
 
                     if(isAnyClothAdded || isAnyPropAdded) {
-                        using(MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(GenerateShopMetaContent((Sex)sexNr, collectionName)))) {
+                        using(MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(GetShopMetaContent(sex)))) {
                             var binFile = dataDir.CreateBinaryFile();
-                            binFile.Name = Prefixes[sexNr] + "freemode_01_" + Prefixes[sexNr] + collectionName + ".meta";
+                            binFile.Name = sex.ToPrefix() + "freemode_01_" + sex.ToPrefix() + project.Name + ".meta";
                             binFile.Import(stream);
                         }
                         currComponentRpf.Flush();
 
                         var binRpfFile = cdimagesDir.CreateBinaryFile();
-                        binRpfFile.Name = FolderNames[sexNr].Replace("ped_", collectionName + "_") + ".rpf";
+                        binRpfFile.Name = OutputName + "_" + sex.ToString() + ".rpf";
                         binRpfFile.Import(currComponentRpf.archive_.BaseStream);
 
                         currComponentRpf.Dispose();
                     }
 
                     if(isAnyPropAdded) {
-                        if(sexNr == 0)
+                        if(sex == Sex.Male) {
                             hasMaleProps = true;
-                        else if(sexNr == 1)
+                        } else if(sex == Sex.Female) {
                             hasFemaleProps = true;
+                        }
 
                         currPropRpf.Flush();
 
                         var binRpfFile = cdimagesDir.CreateBinaryFile();
-                        binRpfFile.Name = FolderNames[sexNr].Replace("ped_", collectionName + "_") + "_p.rpf";
+                        binRpfFile.Name = OutputName + "_" + sex.ToString() + "_p.rpf";
                         binRpfFile.Import(currPropRpf.archive_.BaseStream);
 
                         currPropRpf.Dispose();
                     }
                 }
 
-                using(MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(GenerateSingleplayerContentXml(collectionName, hasMale, hasFemale, hasMaleProps, hasFemaleProps)))) {
+                using(MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(GetSingleplayerContentXml(hasMale, hasFemale, hasMaleProps, hasFemaleProps)))) {
                     var binFile = rpf.Root.CreateBinaryFile();
                     binFile.Name = "content.xml";
                     binFile.Import(stream);
                 }
 
-                using(MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(GenerateSingleplayerSetup2Xml(collectionName)))) {
+                using(MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(GetSingleplayerSetup2Xml()))) {
                     var binFile = rpf.Root.CreateBinaryFile();
                     binFile.Name = "setup2.xml";
                     binFile.Import(stream);

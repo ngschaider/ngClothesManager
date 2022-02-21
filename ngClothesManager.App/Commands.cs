@@ -24,5 +24,13 @@ namespace ngClothesManager.App {
             new KeyGesture(Key.D, ModifierKeys.Control)
         });
 
+        public static readonly RoutedUICommand FindDuplicates = new RoutedUICommand("Find Duplicates", "FindDuplicates", typeof(Commands), new InputGestureCollection() {
+            new KeyGesture(Key.F, ModifierKeys.Control | ModifierKeys.Shift)
+        });
+
+        public static readonly RoutedUICommand BuildProject = new RoutedUICommand("Build Project", "BuildProject", typeof(Commands), new InputGestureCollection() {
+            new KeyGesture(Key.B, ModifierKeys.Control | ModifierKeys.Shift)
+        });
+
     }
 }

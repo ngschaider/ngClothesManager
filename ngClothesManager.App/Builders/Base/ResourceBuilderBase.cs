@@ -6,12 +6,19 @@ using RageLib.Resources.GTA5.PC.Meta;
 
 namespace ngClothesManager.App.Builders.Base {
     public abstract class ResourceBuilderBase : IClothesResourceBuilder {
-        protected readonly string[] Prefixes = { "mp_m_", "mp_f_" };
-        protected readonly string[] FolderNames = { "ped_male", "ped_female" };
 
-        protected string GenerateShopMetaContent(Sex targetSex, string collectionName) {
+        protected Project project;
+        public string OutputName = "unnamed";
+        public string outputFolder;
+
+        public ResourceBuilderBase(Project project, string outputFolder) {
+            this.project = project;
+            this.outputFolder = outputFolder;
+        }
+
+        protected string GetShopMetaContent(Sex targetSex) {
             string targetName = targetSex == Sex.Male ? "mp_m_freemode_01" : "mp_f_freemode_01";
-            string dlcName = (targetSex == Sex.Male ? "mp_m_" : "mp_f_") + collectionName;
+            string dlcName = (targetSex == Sex.Male ? "mp_m_" : "mp_f_") + OutputName;
             string character = targetSex == Sex.Male ? "SCR_CHAR_MULTIPLAYER" : "SCR_CHAR_MULTIPLAYER_F";
             return $@"<?xml version=""1.0"" encoding=""UTF-8""?>
 <ShopPedApparel>
@@ -19,7 +26,7 @@ namespace ngClothesManager.App.Builders.Base {
 	<dlcName>{dlcName}</dlcName>
 	<fullDlcName>{targetName}_{dlcName}</fullDlcName>
 	<eCharacter>{character}</eCharacter>
-	<creatureMetaData>MP_CreatureMetadata_{collectionName}</creatureMetaData>
+	<creatureMetaData>MP_CreatureMetadata_{OutputName}</creatureMetaData>
 	<pedOutfits>
 	</pedOutfits>
 	<pedComponents>
@@ -41,10 +48,10 @@ namespace ngClothesManager.App.Builders.Base {
             }
         }
 
-        private List<MUnk_254518642> GetTexDataForCloth(Cloth clothData) {
+        private List<MUnk_254518642> GetTexDataForCloth(Cloth cloth) {
             List<MUnk_254518642> items = new List<MUnk_254518642>();
-            for(int i = 0; i < clothData.Textures.Count; i++) {
-                byte texId = GetTexIdByDrawableType(clothData, i);
+            for(int i = 0; i < cloth.Textures.Count; i++) {
+                byte texId = GetTexIdByDrawableType(cloth, i);
                 MUnk_254518642 texture = new MUnk_254518642 {
                     TexId = texId
                 };
@@ -54,9 +61,9 @@ namespace ngClothesManager.App.Builders.Base {
         }
 
         // TODO DURTY: verify if its really based on index? Shouldnt be like this actually, because its connected to skin tone or something
-        private byte GetTexIdByDrawableType(Cloth clothData, int index = 0) {
+        private byte GetTexIdByDrawableType(Cloth cloth, int index = 0) {
             byte texId = (byte)index;
-            switch(clothData.DrawableType) {
+            switch(cloth.DrawableType) {
                 case DrawableType.Legs:
                     texId = 1;
                     break;
@@ -92,11 +99,11 @@ namespace ngClothesManager.App.Builders.Base {
             return item;
         }
 
-        protected void GetClothSuffixes(Cloth clothData, out string ytdSuffix, out string yddSuffix) {
-            yddSuffix = clothData.Suffix.EndsWith("u") ? "u" : "r";
-            ytdSuffix = clothData.Suffix.EndsWith("u") ? "uni" : "whi";
+        protected void GetClothSuffixes(Cloth cloth, out string ytdSuffix, out string yddSuffix) {
+            yddSuffix = cloth.Suffix.EndsWith("u") ? "u" : "r";
+            ytdSuffix = cloth.Suffix.EndsWith("u") ? "uni" : "whi";
 
-            switch(clothData.DrawableType) {
+            switch(cloth.DrawableType) {
                 case DrawableType.Legs:
                     yddSuffix = "r";
                     ytdSuffix = "whi";
@@ -167,11 +174,11 @@ namespace ngClothesManager.App.Builders.Base {
                 Unk_4233133352 = 0,
                 Unk_128864925 =
                 {
-                    b0 = (byte) (cloth.ComponentFlags.unkFlag1 ? 1 : 0),
-                    b1 = (byte) (cloth.ComponentFlags.unkFlag2 ? 1 : 0),
-                    b2 = (byte) (cloth.ComponentFlags.unkFlag3 ? 1 : 0),
-                    b3 = (byte) (cloth.ComponentFlags.unkFlag4 ? 1 : 0),
-                    b4 = (byte) (cloth.ComponentFlags.isHighHeels ? 1 : 0)
+                    b0 = (byte) (cloth.ComponentFlags.UnkFlag1 ? 1 : 0),
+                    b1 = (byte) (cloth.ComponentFlags.UnkFlag2 ? 1 : 0),
+                    b2 = (byte) (cloth.ComponentFlags.UnkFlag3 ? 1 : 0),
+                    b3 = (byte) (cloth.ComponentFlags.UnkFlag4 ? 1 : 0),
+                    b4 = (byte) (cloth.ComponentFlags.IsHighHeels ? 1 : 0)
                 },
                 Flags = 0,
                 Inclusions = 0,
@@ -203,6 +210,6 @@ namespace ngClothesManager.App.Builders.Base {
             return ymt;
         }
 
-        public abstract void BuildResource(Project project, string outputFolder, string collectionName);
+        public abstract void BuildResource();
     }
 }

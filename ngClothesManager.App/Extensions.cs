@@ -7,6 +7,32 @@ using System.Threading.Tasks;
 
 namespace ngClothesManager.App {
     public static class Extensions {
+        public static string ToPrefix(this Sex sex) {
+            switch(sex) {
+                case Sex.Male:
+                    return "mp_m_";
+                case Sex.Female:
+                    return "mp_f_";
+                case Sex.Both:
+                case Sex.None:
+                default:
+                    throw new ArgumentException();
+            }
+        }
+        public static string ToString(this Sex sex) {
+            switch(sex) {
+                case Sex.Male:
+                    return "male";
+                case Sex.Female:
+                    return "female";
+                case Sex.Both:
+                    return "both";
+                case Sex.None:
+                    return "none";
+                default:
+                    throw new ArgumentException();
+            }
+        }
         public static string ToIdentifier(this DrawableType type) {
             switch(type) {
                 case DrawableType.Head:
@@ -59,8 +85,10 @@ namespace ngClothesManager.App {
                     return "p_unk1";
                 case DrawableType.PropUnk2:
                     return "p_unk2";
+                case DrawableType.Unkown:
+                case DrawableType.None:
                 default:
-                    return "";
+                    throw new ArgumentException();
             }
         }
 
@@ -117,7 +145,7 @@ namespace ngClothesManager.App {
                 case "p_unk2":
                     return DrawableType.PropUnk2;
                 default:
-                    return DrawableType.Invalid;
+                    return DrawableType.Unkown;
             }
         }
     }

@@ -7,24 +7,21 @@ namespace ngClothesManager.App {
     public partial class ProjectBuildWindow : Window {
 
         public string OutputFolder = "";
-        public string CollectionName = "";
 
         public ProjectBuildWindow() {
             InitializeComponent();
         }
 
-        public static Action<TargetResourceType, string, string> OnExecuteBuild;
+        public static Action<ResourceType, string> OnExecuteBuild;
 
         private void BuildButton_Click(object sender, RoutedEventArgs e) {
-            TargetResourceType resType = TargetResourceType.AltV;
+            ResourceType resType = ResourceType.AltV;
 
             if(isSinglePlayerRadio.IsChecked == true) {
-                resType = TargetResourceType.Single;
+                resType = ResourceType.Single;
             } else if(isFivemResourceRadio.IsChecked == true) {
-                resType = TargetResourceType.FiveM;
+                resType = ResourceType.FiveM;
             }
-
-            CollectionName = collectionNameText.Text;
 
             if(FilePathHasInvalidChars(OutputFolder)) {
                 MessageBox.Show("Output folder path contains invalid characters.\nPlease choose another output location.");
@@ -32,7 +29,7 @@ namespace ngClothesManager.App {
                 return;
             }
 
-            OnExecuteBuild?.Invoke(resType, OutputFolder, CollectionName);
+            OnExecuteBuild?.Invoke(resType, OutputFolder);
         }
 
         private bool FilePathHasInvalidChars(string path) {

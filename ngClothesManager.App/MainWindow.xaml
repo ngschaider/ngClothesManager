@@ -13,27 +13,29 @@
         <CommandBinding Command="ApplicationCommands.Save" CanExecute="SaveCommand_CanExecute" Executed="SaveCommand_Executed" />
         <CommandBinding Command="ApplicationCommands.Close" CanExecute="CloseCommand_CanExecute" Executed="CloseCommand_Executed" />
         <CommandBinding Command="{x:Static local:Commands.Exit}" CanExecute="ExitCommand_CanExecute" Executed="ExitCommand_Executed" />
-
         <CommandBinding Command="{x:Static local:Commands.AddMaleClothes}" CanExecute="AddMaleClothesCommand_CanExecute" Executed="AddMaleClothesCommand_Executed" />
         <CommandBinding Command="{x:Static local:Commands.AddFemaleClothes}" CanExecute="AddFemaleClothesCommand_CanExecute" Executed="AddFemaleClothesCommand_Executed" />
         <CommandBinding Command="{x:Static local:Commands.RemoveSelectedCloth}" CanExecute="RemoveSelectedClothCommand_CanExecute" Executed="RemoveSelectedClothCommand_Executed" />
+        <CommandBinding Command="{x:Static local:Commands.FindDuplicates}" CanExecute="FindDuplicatesCommand_CanExecute" Executed="FindDuplicatesCommand_Executed" />
+        <CommandBinding Command="{x:Static local:Commands.BuildProject}" CanExecute="BuildProjectCommand_CanExecute" Executed="BuildProjectCommand_Executed" />
     </Window.CommandBindings>
-
+    
     <DockPanel>
-        <Menu Height="20" Margin="0" VerticalAlignment="Top" DockPanel.Dock="Top">
+        <Menu Height="20" VerticalAlignment="Top" DockPanel.Dock="Top">
             <MenuItem Header="_Project">
-                <MenuItem Header="_New" Command="ApplicationCommands.New" />
-                <MenuItem Header="_Open" Command="ApplicationCommands.Open" />
-                <MenuItem Header="_Save" Command="ApplicationCommands.Save" />
-                <MenuItem Header="_Close" Command="ApplicationCommands.Close" />
-                <MenuItem Header="_Exit" Command="{x:Static local:Commands.Exit}" />
+                <MenuItem Header="New" Command="ApplicationCommands.New" />
+                <MenuItem Header="Open" Command="ApplicationCommands.Open" />
+                <MenuItem Header="Save" Command="ApplicationCommands.Save" />
+                <MenuItem Header="Close" Command="ApplicationCommands.Close" />
+                <MenuItem Header="Exit" Command="{x:Static local:Commands.Exit}" />
             </MenuItem>
             <MenuItem Header="_Tools">
-                <MenuItem Header="Find _Duplicates" />
+                <MenuItem Header="Find Duplicates" Command="{x:Static local:Commands.FindDuplicates}" />
+                <MenuItem Header="Build Project" Command="{x:Static local:Commands.BuildProject}" />
             </MenuItem>
             <MenuItem Header="_Extras">
-                <MenuItem Header="_Logs" Click="LogsButton_Click" />
-                <MenuItem Header="_About" Click="AboutButton_Click" />
+                <MenuItem Header="Logs" Click="LogsButton_Click" />
+                <MenuItem Header="About" Click="AboutButton_Click" />
             </MenuItem>
         </Menu>
 
@@ -85,23 +87,22 @@
                     </Grid.RowDefinitions>
 
                     <GroupBox Header="Name" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0">
-                        <TextBox TextWrapping="Wrap" Margin="0" BorderBrush="{x:Null}">
+                        <TextBox TextWrapping="Wrap" BorderBrush="{x:Null}">
                             <Binding Path="SelectedCloth.Name" UpdateSourceTrigger="PropertyChanged" />
                         </TextBox>
                     </GroupBox>
 
-                    <!--<GroupBox Header="First person model" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1">
-                        <Grid>
-                            <TextBox Text="{Binding SelectedCloth.FirstPersonModelPath}" VerticalAlignment="Stretch" Margin="0, 0, 100, 0" FontSize="12" Background="Transparent" BorderBrush="{x:Null}" IsEnabled="False" IsReadOnly="True" IsUndoEnabled="False" MaxLines="1"/>
-                            <Button x:Name="selectFirstPersonModel" HorizontalAlignment="Right" Width="40" Margin="0,0,50,-0.333" Content="Select" BorderBrush="{x:Null}" BorderThickness="0" Click="SelectFirstPersonModel_Click"/>
-                            <Button x:Name="clearFirstPersonModel" VerticalAlignment="Stretch" HorizontalAlignment="Right" Width="40" Content="Clear" BorderThickness="0" Click="ClearFirstPersonModel_Click"/>
-                        </Grid>
-                    </GroupBox>-->
-
-                    <GroupBox Header="Texture Name" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="1">
+                    <GroupBox Header="Texture Name" Grid.Column="0" Grid.ColumnSpan="1" Grid.Row="1">
                         <TextBox BorderBrush="{x:Null}">
                             <Binding Path="SelectedTexture.Name" UpdateSourceTrigger="PropertyChanged" />
                         </TextBox>
+                    </GroupBox>
+
+                    <GroupBox Header="Gender" Grid.Column="1" Grid.Row="1">
+                        <StackPanel Orientation="Vertical">
+                            <CheckBox Content="Male" IsChecked="{Binding SelectedCloth.IsMale}" />
+                            <CheckBox Content="Female" IsChecked="{Binding SelectedCloth.IsFemale}" />
+                        </StackPanel>
                     </GroupBox>
 
                     <GroupBox Header="Textures" Grid.Column="0" Grid.Row="2">
@@ -122,11 +123,11 @@
 
                     <GroupBox Header="Flags" Grid.Column="1" Grid.Row="2">
                         <StackPanel Margin="5">
-                            <CheckBox IsChecked="{Binding SelectedCloth.PedComponentFlags.unkFlag1}" Content="unkFlag1" />
-                            <CheckBox IsChecked="{Binding SelectedCloth.PedComponentFlags.unkFlag2}" Content="unkFlag2" />
-                            <CheckBox IsChecked="{Binding SelectedCloth.PedComponentFlags.unkFlag3}" Content="unkFlag3" />
-                            <CheckBox IsChecked="{Binding SelectedCloth.PedComponentFlags.unkFlag4}" Content="unkFlag4" />
-                            <CheckBox IsChecked="{Binding SelectedCloth.PedComponentFlags.isHighHeels}" Content="isHighHeels" />
+                            <CheckBox IsChecked="{Binding SelectedCloth.ComponentFlags.UnkFlag1}" Content="unkFlag1" />
+                            <CheckBox IsChecked="{Binding SelectedCloth.ComponentFlags.UnkFlag2}" Content="unkFlag2" />
+                            <CheckBox IsChecked="{Binding SelectedCloth.ComponentFlags.UnkFlag3}" Content="unkFlag3" />
+                            <CheckBox IsChecked="{Binding SelectedCloth.ComponentFlags.UnkFlag4}" Content="unkFlag4" />
+                            <CheckBox IsChecked="{Binding SelectedCloth.ComponentFlags.IsHighHeels}" Content="isHighHeels" />
                         </StackPanel>
                     </GroupBox>
                 </Grid>
@@ -140,14 +141,21 @@
                         <ColumnDefinition Width="120" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="50" />
+                        <RowDefinition Height="60" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <GroupBox Header="Name" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="5,0,5,5">
-                        <TextBox TextWrapping="Wrap" VerticalAlignment="Top" Margin="0" BorderBrush="{x:Null}" Text="{Binding SelectedCloth.Name}" />
+                    <GroupBox Header="Name" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="1" Margin="5,0,5,5">
+                        <TextBox TextWrapping="Wrap" VerticalAlignment="Top" BorderBrush="{x:Null}" Text="{Binding SelectedCloth.Name}" />
                     </GroupBox>
-                    
+
+                    <GroupBox Header="Gender" Grid.Column="1" Grid.Row="0">
+                        <StackPanel Orientation="Vertical">
+                            <CheckBox Content="Male" IsChecked="{Binding SelectedCloth.IsMale}" />
+                            <CheckBox Content="Female" IsChecked="{Binding SelectedCloth.IsFemale}" />
+                        </StackPanel>
+                    </GroupBox>
+
                     <GroupBox Header="Textures" Grid.Row="1" Grid.Column="0" Margin="5">
                         <Grid>
                             <ListBox ItemsSource="{Binding SelectedCloth.Textures}" BorderThickness="0">
@@ -166,11 +174,11 @@
 
                     <GroupBox Header="Flags" Grid.Row="1" Grid.Column="2" Margin="5">
                         <StackPanel Margin="5">
-                            <CheckBox IsChecked="{Binding SelectedCloth.PedPropFlags.unkFlag1}" Content="unkFlag1" />
-                            <CheckBox IsChecked="{Binding SelectedCloth.PedPropFlags.unkFlag2}" Content="unkFlag2" />
-                            <CheckBox IsChecked="{Binding SelectedCloth.PedPropFlags.unkFlag3}" Content="unkFlag3" />
-                            <CheckBox IsChecked="{Binding SelectedCloth.PedPropFlags.unkFlag4}" Content="unkFlag4" />
-                            <CheckBox IsChecked="{Binding SelectedCloth.PedPropFlags.unkFlag5}" Content="unkFlag5" />
+                            <CheckBox IsChecked="{Binding SelectedCloth.PropFlags.UnkFlag1}" Content="unkFlag1" />
+                            <CheckBox IsChecked="{Binding SelectedCloth.PropFlags.UnkFlag2}" Content="unkFlag2" />
+                            <CheckBox IsChecked="{Binding SelectedCloth.PropFlags.UnkFlag3}" Content="unkFlag3" />
+                            <CheckBox IsChecked="{Binding SelectedCloth.PropFlags.UnkFlag4}" Content="unkFlag4" />
+                            <CheckBox IsChecked="{Binding SelectedCloth.PropFlags.UnkFlag5}" Content="unkFlag5" />
                         </StackPanel>
                     </GroupBox>
                 </Grid>
