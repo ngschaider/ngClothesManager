@@ -8,7 +8,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
-using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 
 namespace ngClothesManager.App {
@@ -18,6 +18,8 @@ namespace ngClothesManager.App {
         private LogWindow logWindow;
 
         private bool IsSearchingForDuplicates = false;
+
+        #region Properties
 
         private Project _project;
         public Project Project {
@@ -30,14 +32,14 @@ namespace ngClothesManager.App {
             }
         }
 
-        private Cloth _selectedCloth;
-        public Cloth SelectedCloth {
+        private Drawable _selectedDrawable;
+        public Drawable SelectedDrawable {
             get {
-                return _selectedCloth;
+                return _selectedDrawable;
             }
             set {
-                _selectedCloth = value;
-                OnPropertyChanged(nameof(SelectedCloth));
+                _selectedDrawable = value;
+                OnPropertyChanged(nameof(SelectedDrawable));
                 OnPropertyChanged(nameof(ComponentEditBoxVisibility));
                 OnPropertyChanged(nameof(PropEditBoxVisibility));
             }
@@ -54,23 +56,40 @@ namespace ngClothesManager.App {
             }
         }
 
+        private ObservableCollection<DrawableListEntry> _drawablesList = new ObservableCollection<DrawableListEntry>();
+        public ObservableCollection<DrawableListEntry> DrawablesList {
+            get {
+                return _drawablesList;
+            }
+            private set {
+                _drawablesList = value;
+                OnPropertyChanged(nameof(DrawablesList));
+            }
+        }
+
+        public string ComponentEditBoxVisibility {
+            get {
+                return SelectedDrawable != null && SelectedDrawable.IsComponent ? "Visible" : "Collapsed";
+            }
+        }
+
+        public string PropEditBoxVisibility {
+            get {
+                return SelectedDrawable != null && SelectedDrawable.IsProp ? "Visible" : "Collapsed";
+            }
+        }
+
+        #endregion
+
+        #region INotifyPropertyChanged
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void OnPropertyChanged(string propertyName) {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public string ComponentEditBoxVisibility {
-            get {
-                return SelectedCloth != null && SelectedCloth.IsComponent ? "Visible" : "Collapsed";
-            }
-        }
-
-        public string PropEditBoxVisibility {
-            get {
-                return SelectedCloth != null && SelectedCloth.IsProp ? "Visible" : "Collapsed";
-            }
-        }
+        #endregion
 
         public MainWindow() {
             InitializeComponent();
@@ -78,78 +97,62 @@ namespace ngClothesManager.App {
 
             Logger.OnLogEntryAdded += OnLogEntryAdded;
 
-            Project.PropertyChanged += (object sender, PropertyChangedEventArgs e) => {
-                if(e.PropertyName == nameof(Project.Clothes)) {
-                    FillClothesList();
-                    Project.Clothes.CollectionChanged += ClothesCollectionChanged;
-                }
+        }
+
+        private void OnDrawablesListChanged(object sender, NotifyCollectionChangedEventArgs e) {
+            
+        }
+
+        private void OnDrawableChanged(object sender, PropertyChangedEventArgs e) {
+            RefreshDrawablesList();
+        }
+
+        #region Events
+
+        private void AddTexture_Click(object sender, RoutedEventArgs e) {
+            if(SelectedDrawable == null) {
+                return;
+            }
+
+            OpenFileDialog openFileDialog = new OpenFileDialog {
+                CheckFileExists = true,
+                Filter = "Drawables texture (*.ytd)|*.ytd",
+                FilterIndex = 1,
+                DefaultExt = "ytd",
+                Multiselect = true,
             };
-        }
 
-        private void FillClothesList() {
-        
-        }
-
-        private void ClothesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e) {
-            ClothesList.Clear();
-
-            List<ClothListEntry> maleList = new List<ClothListEntry>();
-            List<ClothListEntry> femaleList = new List<ClothListEntry>();
-            foreach(DrawableType drawableType in Enum.GetValues(typeof(DrawableType)) {
-                maleList.Add(new ClothListEntry() {
-                    DrawableType = drawableType,
-                });
-                femaleList.Add(new ClothListEntry() {
-                    DrawableType = drawableType,
-                });
+            if(openFileDialog.ShowDialog() != true) {
+                return;
             }
 
-            ClothesList.Add(new ClothListEntry() {
-                Sex = Sex.Male,
-                Children = new ObservableCollection<ClothListEntry>(maleList),
-            });
-            ClothesList.Add(new ClothListEntry() {
-                Sex = Sex.Female,
-                Children = new ObservableCollection<ClothListEntry>(femaleList),
-            });
-
-            foreach(Cloth cloth in Project.Clothes) {
-                var sexEntry = ClothesList.Where(entry => cloth.TargetSex == Sex.Both || entry.Sex == cloth.TargetSex).First();
-                var drawableEntry = sexEntry.Children.Where(entry => entry.DrawableType == cloth.DrawableType).First();
-                drawableEntry.Children.Add(new ClothListEntry() {
-                    Cloth = cloth,
-                });
+            TextureImporter importer = new TextureImporter(Project, SelectedDrawable);
+            foreach(string filePath in openFileDialog.FileNames) {
+                importer.Import(filePath);
             }
         }
-
-        private class ClothListEntry {
-            public Cloth Cloth;
-            public DrawableType DrawableType = DrawableType.None;
-            public Sex Sex = Sex.None;
-
-            public string Label {
-                get {
-                    return Cloth != null ? Cloth.DisplayName : (DrawableType != DrawableType.None ? DrawableType.ToIdentifier() : Sex.ToString());
-                }
+        private void RemoveTexture_Click(object sender, RoutedEventArgs e) {
+            if(Project == null || SelectedDrawable == null || SelectedTexture == null) {
+                return;
             }
-            public ObservableCollection<ClothListEntry> Children = new ObservableCollection<ClothListEntry>();
+
+            Project.RemoveTexture(SelectedDrawable, SelectedTexture);
         }
-
-        private ObservableCollection<ClothListEntry> _clothesList = new ObservableCollection<ClothListEntry>();
-        public ObservableCollection<ClothListEntry> ClothesList {
-            get {
-                return ClothesList;
-            }
-            set {
-                ClothesList = value;
-                OnPropertyChanged(nameof(ClothesList));
-            }
-        }
-
 
         private void OnLogEntryAdded(LogEntry log) {
             statusBarText.Text = log.Message;
         }
+
+        private void SelectedDrawableListEntryChanged(object sender, RoutedEventArgs e) {
+            DrawableListEntry entry = (DrawableListEntry)drawablesList.SelectedItem;
+            if(entry != null && entry.Drawable != null) {
+                SelectedDrawable = entry.Drawable;
+            } else {
+                SelectedDrawable = null;
+            }
+        }
+
+        #endregion
 
         #region MenuItem Commands
 
@@ -180,8 +183,8 @@ namespace ngClothesManager.App {
 
                 int duplicates = 0;
 
-                foreach(Cloth a in Project.Clothes) {
-                    foreach(Cloth b in Project.Clothes) {
+                foreach(Drawable a in Project.Drawables) {
+                    foreach(Drawable b in Project.Drawables) {
                         if(a == b) {
                             continue;
                         }
@@ -272,33 +275,33 @@ namespace ngClothesManager.App {
             }
         }
 
-        private void AddMaleClothesCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+        private void AddMaleDrawablesCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = Project != null;
         }
-        private void AddMaleClothesCommand_Executed(object sender, ExecutedRoutedEventArgs e) {
-            AddClothes(Sex.Male);
+        private void AddMaleDrawablesCommand_Executed(object sender, ExecutedRoutedEventArgs e) {
+            AddDrawables(Sex.Male);
         }
 
-        private void AddFemaleClothesCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+        private void AddFemaleDrawablesCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = Project != null;
         }
-        private void AddFemaleClothesCommand_Executed(object sender, ExecutedRoutedEventArgs e) {
-            AddClothes(Sex.Female);
+        private void AddFemaleDrawablesCommand_Executed(object sender, ExecutedRoutedEventArgs e) {
+            AddDrawables(Sex.Female);
         }
 
-        private void RemoveSelectedClothCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            e.CanExecute = Project != null && SelectedCloth != null;
+        private void RemoveSelectedDrawableCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = Project != null && SelectedDrawable != null;
         }
-        private void RemoveSelectedClothCommand_Executed(object sender, ExecutedRoutedEventArgs e) {
+        private void RemoveSelectedDrawableCommand_Executed(object sender, ExecutedRoutedEventArgs e) {
             try {
-                Project.RemoveCloth(SelectedCloth);
+                Project.RemoveDrawable(SelectedDrawable);
             } catch(Exception ex) {
                 Utils.HandleException(ex);
             }
         }
 
         private void BuildProjectCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            e.CanExecute = Project != null && Project.Clothes.Count > 0;
+            e.CanExecute = Project != null && Project.Drawables.Count > 0;
         }
         private void BuildProjectCommand_Executed(object sender, ExecutedRoutedEventArgs e) {
             ProjectBuildWindow = new ProjectBuildWindow();
@@ -324,35 +327,46 @@ namespace ngClothesManager.App {
 
         #endregion
 
-        private void AddTexture_Click(object sender, RoutedEventArgs e) {
-            if(SelectedCloth == null) {
-                return;
-            }
+        private void RefreshDrawablesList() {
+            DrawablesList.Clear();
 
-            OpenFileDialog openFileDialog = new OpenFileDialog {
-                CheckFileExists = true,
-                Filter = "Clothes texture (*.ytd)|*.ytd",
-                FilterIndex = 1,
-                DefaultExt = "ytd",
-                Multiselect = true,
+            DrawableListEntry maleEntry = new DrawableListEntry() {
+                Sex = Sex.Male,
             };
+            DrawablesList.Add(maleEntry);
 
-            if(openFileDialog.ShowDialog() != true) {
-                return;
+            DrawableListEntry femaleEntry = new DrawableListEntry() {
+                Sex = Sex.Female,
+            };
+            DrawablesList.Add(femaleEntry);
+
+            foreach(DrawableType drawableType in Enum.GetValues(typeof(DrawableType))) {
+                Logger.Log("adding " + drawableType);
+                maleEntry.Children.Add(new DrawableListEntry() {
+                    DrawableType = drawableType,
+                });
+                femaleEntry.Children.Add(new DrawableListEntry() {
+                    DrawableType = drawableType,
+                });
             }
 
-            TextureImporter importer = new TextureImporter(Project, SelectedCloth);
-            foreach(string filePath in openFileDialog.FileNames) {
-                importer.Import(filePath);
+            foreach(DrawableListEntry sexEntry in DrawablesList) {
+                foreach(Drawable drawable in Project.Drawables) {
+                    if(drawable.IsForSex(sexEntry.Sex)) {
+                        foreach(DrawableListEntry drawableEntry in sexEntry.Children) {
+                            if(drawableEntry.DrawableType == drawable.DrawableType) {
+                                drawableEntry.Children.Add(new DrawableListEntry() {
+                                    Drawable = drawable
+                                });
+                            }
+                        }
+                    }
+                }
             }
+
+            Logger.Log("recreating list");
         }
-        private void RemoveTexture_Click(object sender, RoutedEventArgs e) {
-            if(Project == null || SelectedCloth == null || SelectedTexture == null) {
-                return;
-            }
 
-            Project.RemoveTexture(SelectedCloth, SelectedTexture);
-        }
 
         private string AskForProjectFile() {
             OpenFileDialog openFileDialog = new OpenFileDialog {
@@ -385,25 +399,25 @@ namespace ngClothesManager.App {
             return true;
         }
 
-        public void AddClothes(Sex sex) {
+        public void AddDrawables(Sex sex) {
             if(Project == null) {
                 return;
             }
 
             OpenFileDialog openFileDialog = new OpenFileDialog {
                 CheckFileExists = true,
-                Filter = "Clothes geometry (*.ydd)|*.ydd",
+                Filter = "Drawables geometry (*.ydd)|*.ydd",
                 FilterIndex = 1,
                 DefaultExt = "ydd",
                 Multiselect = true,
-                Title = "Adding " + (sex == Sex.Male ? "male" : "female") + " clothes",
+                Title = "Adding " + (sex == Sex.Male ? "male" : "female") + " drawables",
             };
 
             if(openFileDialog.ShowDialog() != true) {
                 return;
             }
 
-            ClothImporter importer = new ClothImporter(Project);
+            DrawableImporter importer = new DrawableImporter(Project);
             foreach(string filePath in openFileDialog.FileNames) {
                 importer.Import(filePath, sex);
             }

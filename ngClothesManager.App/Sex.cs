@@ -8,7 +8,6 @@ namespace ngClothesManager.App {
     public enum Sex {
         Male,
         Female,
-        Both,
-        None
+        None,
     }
 }

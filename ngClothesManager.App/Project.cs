@@ -16,23 +16,23 @@ namespace ngClothesManager.App {
 
         public readonly string Name;
 
-        private ObservableCollection<Cloth> _clothes = new ObservableCollection<Cloth>();
+        
 
         private readonly List<string> filesToDelete = new List<string>();
         private readonly List<string> directoriesToDelete = new List<string>();
 
-        public ObservableCollection<Cloth> Clothes {
+        private ObservableCollection<Drawable> _drawables = new ObservableCollection<Drawable>();
+        public ObservableCollection<Drawable> Drawables {
             get {
-                return _clothes;
+                return _drawables;
             }
-            set {
-                _clothes = value;
-                OnPropertyChanged(nameof(Clothes));
+            private set {
+                _drawables = value;
+                OnPropertyChanged(nameof(Drawables));
             }
         }
 
         private bool _needsSaving;
-
         public bool NeedsSaving {
             get {
                 return _needsSaving;
@@ -59,14 +59,17 @@ namespace ngClothesManager.App {
 
             using(FileStream fileStream = File.OpenRead(ProjectFilePath)) {
                 using(StreamReader reader = new StreamReader(fileStream)) {
-                    string clothDatasText = reader.ReadToEnd();
+                    string drawablesStr = reader.ReadToEnd();
 
-                    if(clothDatasText?.Length > 0) {
-                        List<Cloth> list = JsonConvert.DeserializeObject<List<Cloth>>(clothDatasText, new JsonSerializerSettings() {
+                    if(drawablesStr?.Length > 0) {
+                        List<Drawable> list = JsonConvert.DeserializeObject<List<Drawable>>(drawablesStr, new JsonSerializerSettings() {
                             ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
                         });
 
-                        Clothes = new ObservableCollection<Cloth>(list);
+                        Drawables.Clear();
+                        foreach(Drawable drawable in list) {
+                            Drawables.Add(drawable);
+                        }
                     }
                 }
             }
@@ -83,7 +86,7 @@ namespace ngClothesManager.App {
             }
             directoriesToDelete.Clear();
 
-            string text = JsonConvert.SerializeObject(Clothes);
+            string text = JsonConvert.SerializeObject(Drawables);
 
             using(FileStream fileStream = File.Open(ProjectFilePath, FileMode.Create)) {
                 using(StreamWriter writer = new StreamWriter(fileStream)) {
@@ -111,17 +114,17 @@ namespace ngClothesManager.App {
             FileInfo info = new FileInfo(filePath);
             string name = Path.GetFileNameWithoutExtension(info.Name);
             Project project = new Project(name, info.Directory.FullName);
-            Logger.Log("Project loaded. Total clothes: " + project.Clothes.Count);
+            Logger.Log("Project loaded. Total drawables: " + project.Drawables.Count);
 
             return project;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public int GetEmptyClothId() {
+        public int GetEmptyDrawableId() {
             int id = 0;
             while(true) {
-                if(Clothes.FirstOrDefault(cloth => cloth.Index == id) == null) {
+                if(Drawables.FirstOrDefault(drawable => drawable.Index == id) == null) {
                     return id;
                 }
                 id++;
@@ -145,21 +148,21 @@ namespace ngClothesManager.App {
             return File.Exists(FolderPath + "/" + relPath);
         }
 
-        public void RemoveCloth(Cloth cloth) {
+        public void RemoveDrawable(Drawable drawable) {
             NeedsSaving = true;
-            Clothes.Remove(cloth);
+            Drawables.Remove(drawable);
 
-            directoriesToDelete.Add(cloth.DrawableType.ToIdentifier() + "/" + cloth.Index);
-            Logger.Log("Removed " + cloth.Name + ". Total clothes: " + Clothes.Count);
+            directoriesToDelete.Add(drawable.DrawableType.ToIdentifier() + "/" + drawable.Index);
+            Logger.Log("Removed " + drawable.Name + ". Total drawables: " + Drawables.Count);
         }
 
-        public void RemoveTexture(Cloth cloth, Texture texture) {
+        public void RemoveTexture(Drawable drawable, Texture texture) {
             NeedsSaving = true;
-            cloth.Textures.Remove(texture);
-            string texPath = cloth.GetTexturePath(texture.Index);
+            drawable.Textures.Remove(texture);
+            string texPath = drawable.GetTexturePath(texture.Index);
             RemoveFile(texPath);
 
-            Logger.Log("Removed " + texture.Name + " from " + cloth.Name + ". Textures Count: " + cloth.Textures.Count);
+            Logger.Log("Removed " + texture.Name + " from " + drawable.Name + ". Textures Count: " + drawable.Textures.Count);
         }
     }
 }

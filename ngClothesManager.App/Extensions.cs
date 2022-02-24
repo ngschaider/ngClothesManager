@@ -13,7 +13,6 @@ namespace ngClothesManager.App {
                     return "mp_m_";
                 case Sex.Female:
                     return "mp_f_";
-                case Sex.Both:
                 case Sex.None:
                 default:
                     throw new ArgumentException();
@@ -25,14 +24,51 @@ namespace ngClothesManager.App {
                     return "male";
                 case Sex.Female:
                     return "female";
-                case Sex.Both:
-                    return "both";
                 case Sex.None:
                     return "none";
                 default:
                     throw new ArgumentException();
             }
         }
+
+        public static bool IsComponent(this DrawableType type) {
+            switch(type) {
+                case DrawableType.Head:
+                case DrawableType.Mask:
+                case DrawableType.Hair:
+                case DrawableType.Body:
+                case DrawableType.Legs:
+                case DrawableType.Bag:
+                case DrawableType.Shoes:
+                case DrawableType.Accessories:
+                case DrawableType.Undershirt:
+                case DrawableType.Armor:
+                case DrawableType.Decal:
+                case DrawableType.Top:
+                    return false;
+                case DrawableType.PropHead:
+                case DrawableType.PropEyes:
+                case DrawableType.PropEars:
+                case DrawableType.PropMouth:
+                case DrawableType.PropLHand:
+                case DrawableType.PropRHand:
+                case DrawableType.PropLWrist:
+                case DrawableType.PropRWrist:
+                case DrawableType.PropHip:
+                case DrawableType.PropLFoot:
+                case DrawableType.PropRFoot:
+                case DrawableType.PropUnk1:
+                case DrawableType.PropUnk2:
+                    return true;
+                default:
+                    throw new ArgumentException();
+            }
+        }
+
+        public static bool IsProp(this DrawableType type) {
+            return !type.IsComponent();
+        }
+
         public static string ToIdentifier(this DrawableType type) {
             switch(type) {
                 case DrawableType.Head:

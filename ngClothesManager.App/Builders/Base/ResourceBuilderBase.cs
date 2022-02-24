@@ -5,7 +5,7 @@ using RageLib.Resources.GTA5.PC.GameFiles;
 using RageLib.Resources.GTA5.PC.Meta;
 
 namespace ngClothesManager.App.Builders.Base {
-    public abstract class ResourceBuilderBase : IClothesResourceBuilder {
+    public abstract class ResourceBuilderBase : IDrawablesResourceBuilder {
 
         protected Project project;
         public string OutputName = "unnamed";
@@ -48,10 +48,10 @@ namespace ngClothesManager.App.Builders.Base {
             }
         }
 
-        private List<MUnk_254518642> GetTexDataForCloth(Cloth cloth) {
+        private List<MUnk_254518642> GetTexDataForDrawable(Drawable drawable) {
             List<MUnk_254518642> items = new List<MUnk_254518642>();
-            for(int i = 0; i < cloth.Textures.Count; i++) {
-                byte texId = GetTexIdByDrawableType(cloth, i);
+            for(int i = 0; i < drawable.Textures.Count; i++) {
+                byte texId = GetTexIdByDrawableType(drawable, i);
                 MUnk_254518642 texture = new MUnk_254518642 {
                     TexId = texId
                 };
@@ -61,9 +61,9 @@ namespace ngClothesManager.App.Builders.Base {
         }
 
         // TODO DURTY: verify if its really based on index? Shouldnt be like this actually, because its connected to skin tone or something
-        private byte GetTexIdByDrawableType(Cloth cloth, int index = 0) {
+        private byte GetTexIdByDrawableType(Drawable drawable, int index = 0) {
             byte texId = (byte)index;
-            switch(cloth.DrawableType) {
+            switch(drawable.DrawableType) {
                 case DrawableType.Legs:
                     texId = 1;
                     break;
@@ -77,10 +77,10 @@ namespace ngClothesManager.App.Builders.Base {
             return texId;
         }
 
-        protected MUnk_94549140 GenerateYmtPedPropItem(YmtPedDefinitionFile ymt, Unk_2834549053 anchor, Cloth clothData) {
+        protected MUnk_94549140 GenerateYmtPedPropItem(YmtPedDefinitionFile ymt, Unk_2834549053 anchor, Drawable drawable) {
             var item = new MUnk_94549140(ymt.Unk_376833625.PropInfo) {
                 AnchorId = (byte)anchor,
-                TexData = GetTexDataForCloth(clothData)
+                TexData = GetTexDataForDrawable(drawable)
             };
 
             // Get or create linked anchor
@@ -99,11 +99,11 @@ namespace ngClothesManager.App.Builders.Base {
             return item;
         }
 
-        protected void GetClothSuffixes(Cloth cloth, out string ytdSuffix, out string yddSuffix) {
-            yddSuffix = cloth.Suffix.EndsWith("u") ? "u" : "r";
-            ytdSuffix = cloth.Suffix.EndsWith("u") ? "uni" : "whi";
+        protected void GetDrawableSuffixes(Drawable drawable, out string ytdSuffix, out string yddSuffix) {
+            yddSuffix = drawable.Suffix.EndsWith("u") ? "u" : "r";
+            ytdSuffix = drawable.Suffix.EndsWith("u") ? "uni" : "whi";
 
-            switch(cloth.DrawableType) {
+            switch(drawable.DrawableType) {
                 case DrawableType.Legs:
                     yddSuffix = "r";
                     ytdSuffix = "whi";
@@ -119,8 +119,8 @@ namespace ngClothesManager.App.Builders.Base {
             }
         }
 
-        protected MCComponentInfo GenerateYmtPedComponentItem(Cloth cloth, ref MUnk_3538495220[] componentTextureBindings) {
-            byte componentTypeId = cloth.ComponentTypeId;
+        protected MCComponentInfo GetYmtPedComponentItem(Drawable drawable, ref MUnk_3538495220[] componentTextureBindings) {
+            byte componentTypeId = drawable.ComponentTypeId;
             if(componentTextureBindings[componentTypeId] == null)
                 componentTextureBindings[componentTypeId] = new MUnk_3538495220();
 
@@ -149,15 +149,15 @@ namespace ngClothesManager.App.Builders.Base {
 
             MUnk_1535046754 textureDescription = new MUnk_1535046754 {
                 PropMask = nextPropMask,
-                //Unk_2806194106 = (byte)(clothData.FirstPersonModelPath != "" ? 1 : 0),
+                //Unk_2806194106 = (byte)(drawable.FirstPersonModelPath != "" ? 1 : 0),
                 ClothData =
                 {
                     Unk_2828247905 = 0
                 }
             };
 
-            byte texId = GetTexIdByDrawableType(cloth);
-            foreach(Texture texture in cloth.Textures) {
+            byte texId = GetTexIdByDrawableType(drawable);
+            foreach(Texture texture in drawable.Textures) {
                 MUnk_1036962405 texInfo = new MUnk_1036962405 {
                     Distribution = 255,
                     TexId = texId
@@ -174,11 +174,11 @@ namespace ngClothesManager.App.Builders.Base {
                 Unk_4233133352 = 0,
                 Unk_128864925 =
                 {
-                    b0 = (byte) (cloth.ComponentFlags.UnkFlag1 ? 1 : 0),
-                    b1 = (byte) (cloth.ComponentFlags.UnkFlag2 ? 1 : 0),
-                    b2 = (byte) (cloth.ComponentFlags.UnkFlag3 ? 1 : 0),
-                    b3 = (byte) (cloth.ComponentFlags.UnkFlag4 ? 1 : 0),
-                    b4 = (byte) (cloth.ComponentFlags.IsHighHeels ? 1 : 0)
+                    b0 = (byte) (drawable.ComponentFlags.UnkFlag1 ? 1 : 0),
+                    b1 = (byte) (drawable.ComponentFlags.UnkFlag2 ? 1 : 0),
+                    b2 = (byte) (drawable.ComponentFlags.UnkFlag3 ? 1 : 0),
+                    b3 = (byte) (drawable.ComponentFlags.UnkFlag4 ? 1 : 0),
+                    b4 = (byte) (drawable.ComponentFlags.IsHighHeels ? 1 : 0)
                 },
                 Flags = 0,
                 Inclusions = 0,
@@ -190,7 +190,7 @@ namespace ngClothesManager.App.Builders.Base {
             };
         }
 
-        protected YmtPedDefinitionFile CreateYmtPedDefinitionFile(string ymtName, out MUnk_3538495220[] componentTextureBindings, out int[] componentIndexes, out int[] propIndexes) {
+        protected YmtPedDefinitionFile GetYmtPedDefinitionFile(string ymtName, out MUnk_3538495220[] componentTextureBindings, out int[] componentIndexes, out int[] propIndexes) {
             //Male YMT generating
             YmtPedDefinitionFile ymt = new YmtPedDefinitionFile {
                 metaYmtName = ymtName,

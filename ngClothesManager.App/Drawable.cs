@@ -7,7 +7,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace ngClothesManager.App {
-    public class Cloth : INotifyPropertyChanged {
+    public class Drawable : INotifyPropertyChanged {
 
         private int _index;
         public int Index {
@@ -19,15 +19,6 @@ namespace ngClothesManager.App {
                 OnPropertyChanged(nameof(Index));
                 OnPropertyChanged(nameof(DisplayName));
             }
-        }
-
-        //private static readonly char _offsetLetter = 'a';
-        //private static readonly string[] SexIcons = { "👨🏻", "👩🏻" };
-        //private static readonly string[] TypeIcons = { "🧥", "👓" };
-        //private readonly string _origNumerics = "";
-
-        public ClothType ClothType {
-            get; set;
         }
 
         private DrawableType _drawableType;
@@ -64,17 +55,6 @@ namespace ngClothesManager.App {
             }
         }
 
-        /*private string _firstPersonModelPath;
-        public string FirstPersonModelPath {
-            get {
-                return _firstPersonModelPath;
-            }
-            set {
-                _firstPersonModelPath = value;
-                OnPropertyChanged(nameof(FirstPersonModelPath));
-            }
-        }*/
-
         private ObservableCollection<Texture> _textures = new ObservableCollection<Texture>();
 
         public ObservableCollection<Texture> Textures {
@@ -96,7 +76,6 @@ namespace ngClothesManager.App {
             set {
                 _isMale = value;
                 OnPropertyChanged(nameof(IsMale));
-                OnPropertyChanged(nameof(TargetSex));
             }
         }
 
@@ -109,35 +88,19 @@ namespace ngClothesManager.App {
             set {
                 _isFemale = value;
                 OnPropertyChanged(nameof(IsFemale));
-                OnPropertyChanged(nameof(TargetSex));
             }
         }
 
-        public Sex TargetSex {
-            get {
-                return (IsFemale && IsMale) ? Sex.Both : (IsFemale ? Sex.Female : Sex.Male);
-            }
-            set {
-                IsMale = value == Sex.Male || value == Sex.Both;
-                IsFemale = value == Sex.Female || value == Sex.Both;
-                OnPropertyChanged(nameof(TargetSex));
-                OnPropertyChanged(nameof(IsMale));
-                OnPropertyChanged(nameof(IsFemale));
+        public bool IsForSex(Sex sex) {
+            switch(sex) {
+                case Sex.Male:
+                    return IsMale;
+                case Sex.Female:
+                    return IsFemale;
+                default:
+                    throw new ArgumentException();
             }
         }
-
-
-        /*public string Icon {
-            get {
-                return SexIcons[(int)TargetSex];
-            }
-        }
-
-        public string Type {
-            get {
-                return TypeIcons[(int)ClothType];
-            }
-        }*/
 
         public string ModelPath {
             get {
@@ -157,9 +120,7 @@ namespace ngClothesManager.App {
 
         public string DisplayName {
             get {
-                string sexPrefix = (IsMale ? "M" : "") + (IsFemale ? "F" : "");
-                sexPrefix += (sexPrefix.Length > 0 ? " " : "");
-                return sexPrefix + Name + " (ID: " + Index + ") (" + DrawableType.ToIdentifier() + ")";
+                return Name + " (ID " + Index + ")";
             }
         }
 
@@ -174,16 +135,19 @@ namespace ngClothesManager.App {
             }
         }
 
-        private Cloth() {
+        private Drawable() {
             // Needed for deserialization
         }
 
-        public Cloth(int index, ClothType clothType, DrawableType drawableType, Sex sex, string suffix) {
+        public Drawable(int index, DrawableType drawableType, Sex sex, string suffix) {
             Index = index;
-            ClothType = clothType;
             DrawableType = drawableType;
             Name = DrawableType + "" + Index;
-            TargetSex = sex;
+            if(sex == Sex.Male) {
+                IsMale = true;
+            } else if(sex == Sex.Female) {
+                IsFemale = true;
+            }
             Suffix = suffix;
         }
 
@@ -205,7 +169,7 @@ namespace ngClothesManager.App {
 
         public bool IsComponent {
             get {
-                return ClothType == ClothType.Component;
+                return DrawableType.IsComponent();
             }
         }
 
@@ -217,7 +181,7 @@ namespace ngClothesManager.App {
 
         public bool IsProp {
             get {
-                return !IsComponent;
+                return DrawableType.IsProp();
             }
         }
 

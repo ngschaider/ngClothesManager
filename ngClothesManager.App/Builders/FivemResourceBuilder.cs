@@ -19,42 +19,42 @@ namespace ngClothesManager.App.Builders {
             Directory.CreateDirectory(outputFolder + "/stream/" + pedName);
         }
 
-        protected override void CopyPropTextureToResource(Cloth cloth, Texture texture, Sex sex, string componentNumerics, char offsetLetter) {
+        protected override void CopyPropTextureToResource(Drawable drawable, Texture texture, Sex sex, string componentNumerics, char offsetLetter) {
             string pedName = sex.ToPrefix() + "freemode_01_p_" + sex.ToPrefix() + OutputName;
-            string targetFilePath = outputFolder + "/stream/" + pedName + "/" + pedName + "^" + cloth.Prefix + "_diff_" + componentNumerics + "_" + offsetLetter + ".ytd";
-            File.Copy(project.FolderPath + "/" + cloth.GetTexturePath(texture.Index), targetFilePath, true);
+            string targetFilePath = outputFolder + "/stream/" + pedName + "/" + pedName + "^" + drawable.Prefix + "_diff_" + componentNumerics + "_" + offsetLetter + ".ytd";
+            File.Copy(project.FolderPath + "/" + drawable.GetTexturePath(texture.Index), targetFilePath, true);
         }
 
-        protected override void CopyPropModelToResource(Cloth cloth, Sex sex, string componentNumerics) {
+        protected override void CopyPropModelToResource(Drawable drawable, Sex sex, string componentNumerics) {
             string pedName = sex.ToPrefix() + "freemode_01_p_" + sex.ToPrefix() + OutputName;
-            string targetFilePath = outputFolder + "/stream/" + pedName + "/" + sex.ToPrefix() + "freemode_01_p_" + sex.ToPrefix() + OutputName + "^" + cloth.Prefix + "_" + componentNumerics + ".ydd";
-            File.Copy(project.FolderPath + "/" + cloth.ModelPath, targetFilePath, true);
+            string targetFilePath = outputFolder + "/stream/" + pedName + "/" + sex.ToPrefix() + "freemode_01_p_" + sex.ToPrefix() + OutputName + "^" + drawable.Prefix + "_" + componentNumerics + ".ydd";
+            File.Copy(project.FolderPath + "/" + drawable.ModelPath, targetFilePath, true);
         }
 
         #endregion
 
-        #region Resource Clothes
+        #region Resource Drawables
 
-        protected override string GetClothYmtFilePath(Sex sex) {
+        protected override string GetDrawableYmtFilePath(Sex sex) {
             return outputFolder + "/stream/" + sex.ToPrefix() + "freemode_01_" + sex.ToPrefix() + OutputName + ".ymt";
         }
 
-        protected override void OnFirstClothAddedToResource(Sex sex) {
+        protected override void OnFirstDrawableAddedToResource(Sex sex) {
             Directory.CreateDirectory(outputFolder + "/stream");
             string pedName = sex.ToPrefix() + "freemode_01_" + sex.ToPrefix() + OutputName;
             Directory.CreateDirectory(outputFolder + "/stream/" + pedName);
         }
 
-        protected override void CopyClothTextureToResource(Cloth cloth, Texture texture, Sex sex, string componentNumerics, string ytdSuffix, char offsetLetter) {
+        protected override void CopyDrawableTextureToResource(Drawable drawable, Texture texture, Sex sex, string componentNumerics, string ytdSuffix, char offsetLetter) {
             string pedName = sex.ToPrefix() + "freemode_01_" + sex.ToPrefix() + OutputName;
-            string targetFilePath = outputFolder + "/stream/" + pedName + "/" + pedName + "^" + cloth.Prefix + "_diff_" + componentNumerics + "_" + offsetLetter + "_" + ytdSuffix + ".ytd";
-            File.Copy(project.FolderPath + "/" + cloth.GetTexturePath(texture.Index), targetFilePath, true);
+            string targetFilePath = outputFolder + "/stream/" + pedName + "/" + pedName + "^" + drawable.Prefix + "_diff_" + componentNumerics + "_" + offsetLetter + "_" + ytdSuffix + ".ytd";
+            File.Copy(project.FolderPath + "/" + drawable.GetTexturePath(texture.Index), targetFilePath, true);
         }
 
-        protected override void CopyClothModelToResource(Cloth cloth, Sex sex, string componentNumerics, string yddSuffix) {
+        protected override void CopyDrawableModelToResource(Drawable drawable, Sex sex, string componentNumerics, string yddSuffix) {
             string pedName = sex.ToPrefix() + "freemode_01_" + sex.ToPrefix() + OutputName;
-            string targetFilePath = outputFolder + "/stream/" + pedName + "/" + pedName + "^" + cloth.Prefix + "_" + componentNumerics + "_" + yddSuffix + ".ydd";
-            File.Copy(project.FolderPath + "/" + cloth.ModelPath, targetFilePath, true);
+            string targetFilePath = outputFolder + "/stream/" + pedName + "/" + pedName + "^" + drawable.Prefix + "_" + componentNumerics + "_" + yddSuffix + ".ydd";
+            File.Copy(project.FolderPath + "/" + drawable.ModelPath, targetFilePath, true);
         }
 
         #endregion
@@ -63,8 +63,8 @@ namespace ngClothesManager.App.Builders {
             File.WriteAllText(outputFolder + "/fxmanifest.lua", GetFxmanifestContent(resourceLuaMetas));
         }
 
-        protected override void OnResourceClothDataFinished(Sex sex, bool isAnyPropAdded, bool isAnyClothAdded) {
-            if(!isAnyClothAdded && !isAnyPropAdded) {
+        protected override void OnResourceDrawableDataFinished(Sex sex, bool isAnyComponentAdded, bool isAnyPropAdded) {
+            if(!isAnyPropAdded && !isAnyComponentAdded) {
                 return;
             }
 

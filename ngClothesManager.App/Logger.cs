@@ -17,8 +17,8 @@ namespace ngClothesManager.App {
             LogEntry logEntry = new LogEntry(message);
             
             Entries.Add(logEntry);
-            OnLogEntryAdded?.Invoke(logEntry);
             Console.WriteLine(message);
+            OnLogEntryAdded?.Invoke(logEntry);
         }
 
     }

@@ -1,5 +1,5 @@
 ﻿namespace ngClothesManager.App.Contracts {
-    internal interface IClothesResourceBuilder {
+    internal interface IDrawablesResourceBuilder {
         void BuildResource();
     }
 }

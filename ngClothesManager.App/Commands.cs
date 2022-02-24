@@ -12,15 +12,15 @@ namespace ngClothesManager.App {
             new KeyGesture(Key.F4, ModifierKeys.Alt)
         });
 
-        public static readonly RoutedUICommand AddMaleClothes = new RoutedUICommand("Add Male Clothes", "AddMaleClothes", typeof(Commands), new InputGestureCollection() {
+        public static readonly RoutedUICommand AddMaleDrawables = new RoutedUICommand("Add Male Drawables", "AddMaleDrawables", typeof(Commands), new InputGestureCollection() {
             new KeyGesture(Key.M, ModifierKeys.Control)
         });
 
-        public static readonly RoutedUICommand AddFemaleClothes = new RoutedUICommand("Add Female Clothes", "AddFemaleClothes", typeof(Commands), new InputGestureCollection() {
+        public static readonly RoutedUICommand AddFemaleDrawables = new RoutedUICommand("Add Female Drawables", "AddFemaleDrawables", typeof(Commands), new InputGestureCollection() {
             new KeyGesture(Key.F, ModifierKeys.Control)
         });
 
-        public static readonly RoutedUICommand RemoveSelectedCloth = new RoutedUICommand("Remove Selected Cloth", "RemoveSelectedCloth", typeof(Commands), new InputGestureCollection() {
+        public static readonly RoutedUICommand RemoveSelectedDrawable = new RoutedUICommand("Remove Selected Drawables", "RemoveSelectedDrawable", typeof(Commands), new InputGestureCollection() {
             new KeyGesture(Key.D, ModifierKeys.Control)
         });
 

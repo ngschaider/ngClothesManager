@@ -85,8 +85,8 @@ namespace ngClothesManager.App {
 
             backgroundWorker.DoWork += (object sender, DoWorkEventArgs e) => {
                 int index = 0;
-                foreach(Cloth a in project.Clothes) {
-                    foreach(Cloth b in project.Clothes) {                        
+                foreach(Drawable a in project.Drawables) {
+                    foreach(Drawable b in project.Drawables) {                        
                         if(a == b) {
                             continue;
                         }
@@ -98,7 +98,7 @@ namespace ngClothesManager.App {
                         });
 
                         index++;
-                        backgroundWorker.ReportProgress(index / project.Clothes.Count * 100);
+                        backgroundWorker.ReportProgress(index / project.Drawables.Count * 100);
                     }
                 }
             };

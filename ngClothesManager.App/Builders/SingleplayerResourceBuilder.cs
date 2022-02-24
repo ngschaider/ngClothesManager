@@ -180,25 +180,25 @@ namespace ngClothesManager.App.Builders {
                 bool hasFemaleProps = false;
 
                 foreach(Sex sex in new Sex[] { Sex.Male, Sex.Female }) {
-                    YmtPedDefinitionFile ymt = CreateYmtPedDefinitionFile(sex.ToPrefix() + OutputName, out var componentTextureBindings, out int[] componentIndexes, out var propIndexes);
+                    YmtPedDefinitionFile ymt = GetYmtPedDefinitionFile(sex.ToPrefix() + OutputName, out var componentTextureBindings, out int[] componentIndexes, out var propIndexes);
 
-                    bool isAnyClothAdded = false;
+                    bool isAnyComponentAdded = false;
                     bool isAnyPropAdded = false;
 
-                    foreach(Cloth cloth in project.Clothes) {
-                        if(cloth.IsComponent) {
-                            if(cloth.Textures.Count <= 0 || cloth.TargetSex != sex) {
+                    foreach(Drawable drawable in project.Drawables) {
+                        if(drawable.IsComponent) {
+                            if(drawable.Textures.Count <= 0 || !drawable.IsForSex(sex)) {
                                 continue;
                             }
 
-                            var componentItemInfo = GenerateYmtPedComponentItem(cloth, ref componentTextureBindings);
+                            var componentItemInfo = GetYmtPedComponentItem(drawable, ref componentTextureBindings);
                             ymt.Unk_376833625.CompInfos.Add(componentItemInfo);
 
                             var componentTypeId = componentItemInfo.Unk_3509540765;
-                            GetClothSuffixes(cloth, out var ytdPostfix, out var yddPostfix);
+                            GetDrawableSuffixes(drawable, out var ytdPostfix, out var yddPostfix);
 
-                            if(!isAnyClothAdded) {
-                                isAnyClothAdded = true;
+                            if(!isAnyComponentAdded) {
+                                isAnyComponentAdded = true;
 
                                 var ms = new MemoryStream();
 
@@ -213,25 +213,25 @@ namespace ngClothesManager.App.Builders {
                             int currentComponentIndex = componentIndexes[componentTypeId]++;
 
                             string componentNumerics = currentComponentIndex.ToString().PadLeft(3, '0');
-                            string prefix = cloth.Prefix;
+                            string prefix = drawable.Prefix;
 
                             var resource = currComponentDir.CreateResourceFile();
                             resource.Name = prefix + "_" + componentNumerics + "_" + yddPostfix + ".ydd";
-                            resource.Import(cloth.ModelPath);
+                            resource.Import(drawable.ModelPath);
 
-                            foreach(Texture texture in cloth.Textures) {
+                            foreach(Texture texture in drawable.Textures) {
                                 resource = currComponentDir.CreateResourceFile();
                                 resource.Name = prefix + "_diff_" + componentNumerics + "_" + Utils.NumberToLetter(texture.Index) + "_" + ytdPostfix + ".ytd";
-                                resource.Import(cloth.GetTexturePath(texture.Index));
+                                resource.Import(drawable.GetTexturePath(texture.Index));
                             }
                         } else {
-                            if(cloth.Textures.Count <= 0 || cloth.TargetSex != sex) {
+                            if(drawable.Textures.Count <= 0 || !drawable.IsForSex(sex)) {
                                 continue;
                             }
 
-                            Unk_2834549053 anchor = (Unk_2834549053)cloth.PedPropTypeId;
+                            Unk_2834549053 anchor = (Unk_2834549053)drawable.PedPropTypeId;
                             var defs = ymt.Unk_376833625.PropInfo.Props[anchor] ?? new List<MUnk_94549140>();
-                            var item = GenerateYmtPedPropItem(ymt, anchor, cloth);
+                            var item = GenerateYmtPedPropItem(ymt, anchor, drawable);
                             defs.Add(item);
 
                             if(!isAnyPropAdded) {
@@ -248,24 +248,24 @@ namespace ngClothesManager.App.Builders {
                             int currentPropIndex = propIndexes[(byte)anchor]++;
 
                             string componentNumerics = currentPropIndex.ToString().PadLeft(3, '0');
-                            string prefix = cloth.Prefix;
+                            string prefix = drawable.Prefix;
 
-                            //cloth.SetComponentNumerics(componentNumerics, currentPropIndex);
+                            //drawable.SetComponentNumerics(componentNumerics, currentPropIndex);
 
                             var resource = currPropDir.CreateResourceFile();
                             resource.Name = prefix + "_" + componentNumerics + ".ydd";
-                            resource.Import(cloth.ModelPath);
+                            resource.Import(drawable.ModelPath);
 
-                            foreach(Texture texture in cloth.Textures) {
+                            foreach(Texture texture in drawable.Textures) {
                                 resource = currPropDir.CreateResourceFile();
-                                resource.Name = prefix + "_diff_" + cloth.Index + "_" + Utils.NumberToLetter(texture.Index) + ".ytd";
-                                resource.Import(cloth.GetTexturePath(texture.Index));
+                                resource.Name = prefix + "_diff_" + drawable.Index + "_" + Utils.NumberToLetter(texture.Index) + ".ytd";
+                                resource.Import(drawable.GetTexturePath(texture.Index));
                             }
                             
                         }
                     }
 
-                    if(isAnyClothAdded) {
+                    if(isAnyComponentAdded) {
                         if(sex == Sex.Male) {
                             hasMale = true;
                         } else if(sex == Sex.Female) {
@@ -275,7 +275,7 @@ namespace ngClothesManager.App.Builders {
                         UpdateYmtComponentTextureBindings(componentTextureBindings, ymt);
                     }
 
-                    if(isAnyClothAdded || isAnyPropAdded) {
+                    if(isAnyComponentAdded || isAnyPropAdded) {
                         using(MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(GetShopMetaContent(sex)))) {
                             var binFile = dataDir.CreateBinaryFile();
                             binFile.Name = sex.ToPrefix() + "freemode_01_" + sex.ToPrefix() + project.Name + ".meta";
