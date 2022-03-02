@@ -15,6 +15,7 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -27,7 +28,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -53,6 +53,9 @@
   <ItemGroup>
     <Reference Include="DotNetZip, Version=1.16.0.0, Culture=neutral, PublicKeyToken=6583c7c814667745, processorArchitecture=MSIL">
       <HintPath>..\packages\DotNetZip.1.16.0\lib\net40\DotNetZip.dll</HintPath>
+    </Reference>
+    <Reference Include="Hellosam.Net.Collections, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\hellosam.net.collections.1.0.0\lib\net35-client\Hellosam.Net.Collections.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -96,13 +99,18 @@
     <Compile Include="Builders\AltvResourceBuilder.cs" />
     <Compile Include="Builders\Base\MultiplayerResourceBuilderBase.cs" />
     <Compile Include="Builders\Base\ResourceBuilderBase.cs" />
-    <Compile Include="ClothListEntry.cs" />
+    <Compile Include="DrawableListEntry.cs" />
     <Compile Include="DrawableImporter.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="ComponentFlags.cs" />
     <Compile Include="Contracts\IClothesResourceBuilder.cs" />
-    <Compile Include="DrawableTypes.cs" />
+    <Compile Include="DrawableList.cs" />
+    <Compile Include="DrawableType.cs" />
+    <Compile Include="EnumToStringConverter.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="GenerateEmptySlotsWindow.xaml.cs">
+      <DependentUpon>GenerateEmptySlotsWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="LogEntry.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="FindDuplicatesWindow.xaml.cs">
@@ -125,12 +133,16 @@
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
     <Compile Include="Builders\SingleplayerResourceBuilder.cs" />
-    <Compile Include="Sex.cs" />
+    <Compile Include="Gender.cs" />
     <Compile Include="TargetResourceType.cs" />
     <Compile Include="Texture.cs" />
     <Compile Include="TextureImporter.cs" />
     <Compile Include="Utils.cs" />
     <Page Include="FindDuplicatesWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="GenerateEmptySlotsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -175,12 +187,14 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Resource.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
@@ -193,6 +207,8 @@
     <None Include="Resources\gtav_ng_encrypt_luts.dat" />
     <None Include="Resources\gtav_ng_encrypt_tables.dat" />
     <None Include="Resources\gtav_ng_key.dat" />
+    <None Include="Resources\modelDummy.ydd" />
+    <None Include="Resources\texDummy.ytd" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -204,7 +220,7 @@
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
       <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.7.2 %28x86 and x64%29</ProductName>
+      <ProductName>Microsoft .NET Framework 4.7.2 %28x86 und x64%29</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">

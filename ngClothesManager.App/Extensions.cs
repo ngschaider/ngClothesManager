@@ -7,25 +7,22 @@ using System.Threading.Tasks;
 
 namespace ngClothesManager.App {
     public static class Extensions {
-        public static string ToPrefix(this Sex sex) {
-            switch(sex) {
-                case Sex.Male:
+        public static string ToPrefix(this Gender gender) {
+            switch(gender) {
+                case Gender.Male:
                     return "mp_m_";
-                case Sex.Female:
+                case Gender.Female:
                     return "mp_f_";
-                case Sex.None:
                 default:
                     throw new ArgumentException();
             }
         }
-        public static string ToString(this Sex sex) {
-            switch(sex) {
-                case Sex.Male:
+        public static string ToString(this Gender gender) {
+            switch(gender) {
+                case Gender.Male:
                     return "male";
-                case Sex.Female:
+                case Gender.Female:
                     return "female";
-                case Sex.None:
-                    return "none";
                 default:
                     throw new ArgumentException();
             }
@@ -45,7 +42,7 @@ namespace ngClothesManager.App {
                 case DrawableType.Armor:
                 case DrawableType.Decal:
                 case DrawableType.Top:
-                    return false;
+                    return true;
                 case DrawableType.PropHead:
                 case DrawableType.PropEyes:
                 case DrawableType.PropEars:
@@ -59,7 +56,7 @@ namespace ngClothesManager.App {
                 case DrawableType.PropRFoot:
                 case DrawableType.PropUnk1:
                 case DrawableType.PropUnk2:
-                    return true;
+                    return false;
                 default:
                     throw new ArgumentException();
             }
@@ -121,67 +118,93 @@ namespace ngClothesManager.App {
                     return "p_unk1";
                 case DrawableType.PropUnk2:
                     return "p_unk2";
-                case DrawableType.Unkown:
-                case DrawableType.None:
                 default:
                     throw new ArgumentException();
             }
         }
 
-        public static DrawableType ToDrawableType(this string input) {
+        public static bool ToDrawableType(this string input, out DrawableType output) {
             switch(input) {
                 case "head":
-                    return DrawableType.Head;
+                    output = DrawableType.Head;
+                    return true;
                 case "berd":
-                    return DrawableType.Mask;
+                    output = DrawableType.Mask;
+                    return true;
                 case "hair":
-                    return DrawableType.Hair;
+                    output = DrawableType.Hair;
+                    return true;
                 case "uppr":
-                    return DrawableType.Body;
+                    output = DrawableType.Body;
+                    return true;
                 case "lowr":
-                    return DrawableType.Legs;
+                    output = DrawableType.Legs;
+                    return true;
                 case "hand":
-                    return DrawableType.Bag;
+                    output = DrawableType.Bag;
+                    return true;
                 case "feet":
-                    return DrawableType.Shoes;
+                    output = DrawableType.Shoes;
+                    return true;
                 case "teef":
-                    return DrawableType.Accessories;
+                    output = DrawableType.Accessories;
+                    return true;
                 case "accs":
-                    return DrawableType.Undershirt;
+                    output = DrawableType.Undershirt;
+                    return true;
                 case "task":
-                    return DrawableType.Armor;
+                    output = DrawableType.Armor;
+                    return true;
                 case "decl":
-                    return DrawableType.Decal;
+                    output = DrawableType.Decal;
+                    return true;
                 case "jbib":
-                    return DrawableType.Top;
+                    output = DrawableType.Top;
+                    return true;
                 case "p_head":
-                    return DrawableType.PropHead;
+                    output = DrawableType.PropHead;
+                    return true;
                 case "p_eyes":
-                    return DrawableType.PropEyes;
+                    output = DrawableType.PropEyes;
+                    return true;
                 case "p_ears":
-                    return DrawableType.PropEars;
+                    output = DrawableType.PropEars;
+                    return true;
                 case "p_mouth":
-                    return DrawableType.PropMouth;
+                    output = DrawableType.PropMouth;
+                    return true;
                 case "p_lhand":
-                    return DrawableType.PropLHand;
+                    output = DrawableType.PropLHand;
+                    return true;
                 case "p_rhand":
-                    return DrawableType.PropRHand;
+                    output = DrawableType.PropRHand;
+                    return true;
                 case "p_lwrist":
-                    return DrawableType.PropLWrist;
+                    output = DrawableType.PropLWrist;
+                    return true;
                 case "p_rwrist":
-                    return DrawableType.PropRWrist;
+                    output = DrawableType.PropRWrist;
+                    return true;
                 case "p_hip":
-                    return DrawableType.PropHip;
+                    output = DrawableType.PropHip;
+                    return true;
                 case "p_lfoot":
-                    return DrawableType.PropLFoot;
+                    output = DrawableType.PropLFoot;
+                    return true;
                 case "p_rfoot":
-                    return DrawableType.PropRFoot;
+                    output = DrawableType.PropRFoot;
+                    return true;
                 case "p_unk1":
-                    return DrawableType.PropUnk1;
+                    output = DrawableType.PropUnk1;
+                    return true;
                 case "p_unk2":
-                    return DrawableType.PropUnk2;
+                    output = DrawableType.PropUnk2;
+                    return true;
                 default:
-                    return DrawableType.Unkown;
+                    // it does not matter what we set here
+                    // the output should not be used when returning false
+                    output = DrawableType.Accessories; 
+                    return false;
             }
         }
     }

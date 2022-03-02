@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -8,20 +9,20 @@ using System.Threading.Tasks;
 namespace ngClothesManager.App {
     public class Texture : INotifyPropertyChanged {
 
-		private int _index;
+        #region Properties
 
-		public int Index {
+        private int _id;
+		public int Id {
 			get {
-				return _index;
+				return _id;
 			}
 			set {
-				_index = value;
-				OnPropertyChanged(nameof(Index));
+				_id = value;
+				OnPropertyChanged(nameof(Id));
 			}
 		}
 
-		private string _name;
-
+		private string _name = "Texture";
 		public string Name {
 			get {
 				return _name;
@@ -29,23 +30,36 @@ namespace ngClothesManager.App {
 			set {
 				_name = value;
 				OnPropertyChanged(nameof(Name));
+				OnPropertyChanged(nameof(DisplayName));
+			}
+		}
+		
+		[JsonIgnore]
+		public string DisplayName {
+			get {
+				return Name + " (ID " + Id + ")";
 			}
 		}
 
+		#endregion
+
+		#region INotifyPropertChanged
+
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		public void OnPropertyChanged(string memberName) {
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(memberName));
+		public void OnPropertyChanged(string propertyName) {
+			//Logger.Log("PropertyChanged: Texture." + propertyName);
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
 
+		#endregion
 
 		private Texture() {
 			// needed for deserializaton
 		}
 
-		public Texture(int index) {
-			Index = index;
-			Name = "Texture " + index;
+		public Texture(int id) {
+			Id = id;
 		}
 	}
 }

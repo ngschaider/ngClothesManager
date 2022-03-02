@@ -13,21 +13,21 @@ namespace ngClothesManager.App.Builders {
 
         #region Resource Props 
 
-        protected override void OnFirstPropAddedToResource(Sex sex) {
-            string pedName = sex.ToPrefix() + "freemode_01_p_" + sex.ToPrefix() + OutputName;
+        protected override void OnFirstPropAddedToResource(Gender gender) {
+            string pedName = gender.ToPrefix() + "freemode_01_p_" + gender.ToPrefix() + OutputName;
             Directory.CreateDirectory(outputFolder + "/stream");
             Directory.CreateDirectory(outputFolder + "/stream/" + pedName);
         }
 
-        protected override void CopyPropTextureToResource(Drawable drawable, Texture texture, Sex sex, string componentNumerics, char offsetLetter) {
-            string pedName = sex.ToPrefix() + "freemode_01_p_" + sex.ToPrefix() + OutputName;
+        protected override void CopyPropTextureToResource(Drawable drawable, Texture texture, Gender gender, string componentNumerics, char offsetLetter) {
+            string pedName = gender.ToPrefix() + "freemode_01_p_" + gender.ToPrefix() + OutputName;
             string targetFilePath = outputFolder + "/stream/" + pedName + "/" + pedName + "^" + drawable.Prefix + "_diff_" + componentNumerics + "_" + offsetLetter + ".ytd";
-            File.Copy(project.FolderPath + "/" + drawable.GetTexturePath(texture.Index), targetFilePath, true);
+            File.Copy(project.FolderPath + "/" + drawable.GetTexturePath(texture.Id), targetFilePath, true);
         }
 
-        protected override void CopyPropModelToResource(Drawable drawable, Sex sex, string componentNumerics) {
-            string pedName = sex.ToPrefix() + "freemode_01_p_" + sex.ToPrefix() + OutputName;
-            string targetFilePath = outputFolder + "/stream/" + pedName + "/" + sex.ToPrefix() + "freemode_01_p_" + sex.ToPrefix() + OutputName + "^" + drawable.Prefix + "_" + componentNumerics + ".ydd";
+        protected override void CopyPropModelToResource(Drawable drawable, Gender gender, string componentNumerics) {
+            string pedName = gender.ToPrefix() + "freemode_01_p_" + gender.ToPrefix() + OutputName;
+            string targetFilePath = outputFolder + "/stream/" + pedName + "/" + gender.ToPrefix() + "freemode_01_p_" + gender.ToPrefix() + OutputName + "^" + drawable.Prefix + "_" + componentNumerics + ".ydd";
             File.Copy(project.FolderPath + "/" + drawable.ModelPath, targetFilePath, true);
         }
 
@@ -35,24 +35,24 @@ namespace ngClothesManager.App.Builders {
 
         #region Resource Drawables
 
-        protected override string GetDrawableYmtFilePath(Sex sex) {
-            return outputFolder + "/stream/" + sex.ToPrefix() + "freemode_01_" + sex.ToPrefix() + OutputName + ".ymt";
+        protected override string GetDrawableYmtFilePath(Gender gender) {
+            return outputFolder + "/stream/" + gender.ToPrefix() + "freemode_01_" + gender.ToPrefix() + OutputName + ".ymt";
         }
 
-        protected override void OnFirstDrawableAddedToResource(Sex sex) {
+        protected override void OnFirstDrawableAddedToResource(Gender gender) {
             Directory.CreateDirectory(outputFolder + "/stream");
-            string pedName = sex.ToPrefix() + "freemode_01_" + sex.ToPrefix() + OutputName;
+            string pedName = gender.ToPrefix() + "freemode_01_" + gender.ToPrefix() + OutputName;
             Directory.CreateDirectory(outputFolder + "/stream/" + pedName);
         }
 
-        protected override void CopyDrawableTextureToResource(Drawable drawable, Texture texture, Sex sex, string componentNumerics, string ytdSuffix, char offsetLetter) {
-            string pedName = sex.ToPrefix() + "freemode_01_" + sex.ToPrefix() + OutputName;
+        protected override void CopyDrawableTextureToResource(Drawable drawable, Texture texture, Gender gender, string componentNumerics, string ytdSuffix, char offsetLetter) {
+            string pedName = gender.ToPrefix() + "freemode_01_" + gender.ToPrefix() + OutputName;
             string targetFilePath = outputFolder + "/stream/" + pedName + "/" + pedName + "^" + drawable.Prefix + "_diff_" + componentNumerics + "_" + offsetLetter + "_" + ytdSuffix + ".ytd";
-            File.Copy(project.FolderPath + "/" + drawable.GetTexturePath(texture.Index), targetFilePath, true);
+            File.Copy(project.FolderPath + "/" + drawable.GetTexturePath(texture.Id), targetFilePath, true);
         }
 
-        protected override void CopyDrawableModelToResource(Drawable drawable, Sex sex, string componentNumerics, string yddSuffix) {
-            string pedName = sex.ToPrefix() + "freemode_01_" + sex.ToPrefix() + OutputName;
+        protected override void CopyDrawableModelToResource(Drawable drawable, Gender gender, string componentNumerics, string yddSuffix) {
+            string pedName = gender.ToPrefix() + "freemode_01_" + gender.ToPrefix() + OutputName;
             string targetFilePath = outputFolder + "/stream/" + pedName + "/" + pedName + "^" + drawable.Prefix + "_" + componentNumerics + "_" + yddSuffix + ".ydd";
             File.Copy(project.FolderPath + "/" + drawable.ModelPath, targetFilePath, true);
         }
@@ -63,15 +63,15 @@ namespace ngClothesManager.App.Builders {
             File.WriteAllText(outputFolder + "/fxmanifest.lua", GetFxmanifestContent(resourceLuaMetas));
         }
 
-        protected override void OnResourceDrawableDataFinished(Sex sex, bool isAnyComponentAdded, bool isAnyPropAdded) {
+        protected override void OnResourceDrawableDataFinished(Gender gender, bool isAnyComponentAdded, bool isAnyPropAdded) {
             if(!isAnyPropAdded && !isAnyComponentAdded) {
                 return;
             }
 
-            string shopMetaFilePath = outputFolder + "/" + sex.ToPrefix() + "freemode_01_" + sex.ToPrefix() + OutputName + ".meta";
-            File.WriteAllText(shopMetaFilePath, GetShopMetaContent(sex));
+            string shopMetaFilePath = outputFolder + "/" + gender.ToPrefix() + "freemode_01_" + gender.ToPrefix() + OutputName + ".meta";
+            File.WriteAllText(shopMetaFilePath, GetShopMetaContent(gender));
 
-            resourceLuaMetas.Add(sex.ToPrefix() + "freemode_01_" + sex.ToPrefix() + OutputName + ".meta");
+            resourceLuaMetas.Add(gender.ToPrefix() + "freemode_01_" + gender.ToPrefix() + OutputName + ".meta");
         }
 
         private string GetFxmanifestContent(List<string> metas) {

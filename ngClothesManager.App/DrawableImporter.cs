@@ -14,8 +14,22 @@ namespace ngClothesManager.App {
             this.project = project;
         }
 
-        public void Import(string filePath, Sex sex) {
-            
+        public void Import(string filePath) {
+            string fileName = Path.GetFileName(filePath);
+
+            string baseName = Path.GetFileNameWithoutExtension(filePath);
+
+            foreach(Gender gender in Enum.GetValues(typeof(Gender))) {
+                if(baseName.StartsWith(gender.ToPrefix())) {
+                    Import(filePath, gender);
+                    return;
+                }
+            }
+
+            throw new Exception("Could not detect gender from filename " + baseName);
+        }
+
+        public void Import(string filePath, Gender gender) {
             string fileName = Path.GetFileName(filePath);
 
             string baseName = Path.GetFileNameWithoutExtension(filePath);
@@ -30,16 +44,23 @@ namespace ngClothesManager.App {
                 throw new Exception("Wrong drawable name");
             }
 
-            string drawableTypeIdentifier = parts[0].ToLower() == "p" ? parts[0] : parts[0] + "_" + parts[1];
-            DrawableType drawableType = drawableTypeIdentifier.ToDrawableType();
+            string drawableTypeIdentifier = parts[0].ToLower() == "p" ? parts[0] + "_" + parts[1] : parts[0];
+            if(!drawableTypeIdentifier.ToDrawableType(out DrawableType drawableType)) {
+                Logger.Log("Could not parse drawable type " + drawableTypeIdentifier + " - skipping");
+                return;
+            }
 
-            int originalNumber = drawableType.IsComponent() ? Convert.ToInt32(parts[1]) : Convert.ToInt32(parts[2]);
+            string numberToParse = drawableType.IsComponent() ? parts[1] : parts[2];
+            if(!Int32.TryParse(numberToParse, out int originalNumber)) {
+                Logger.Log("Could not parse number " + numberToParse + " - skipping");
+                return;
+            }
 
             string suffix = string.Join("_", parts.Skip(drawableType.IsComponent() ? 2 : 3));
 
             bool isVariation = parts.Length > 3;
 
-            Drawable drawable = new Drawable(project.GetEmptyDrawableId(), drawableType, sex, suffix);
+            Drawable drawable = new Drawable(project.GetEmptyDrawableId(), drawableType, gender, suffix);
 
             if(isVariation) {
                 Logger.Log("Item " + fileName + " can't be added. Looks like it's variant of another item");
@@ -47,7 +68,7 @@ namespace ngClothesManager.App {
             }
 
             project.Drawables.Add(drawable);
-            project.AddFile(filePath, drawable.DrawableType.ToIdentifier() + "/" + drawable.Index + "/model.ydd");
+            project.AddFile(filePath, drawable.DrawableType.ToIdentifier() + "/" + drawable.Id + "/model.ydd");
 
 
             List<string> texturePaths = SearchForTextures(filePath, originalNumber, prefix, drawable);
@@ -57,7 +78,7 @@ namespace ngClothesManager.App {
                 importer.Import(texturePath);
             }
 
-            Logger.Log(drawable + " added. (Found " + drawable.Textures.Count + " textures). Total drawables: " + project.Drawables.Count);
+            Logger.Log(drawable.DisplayName + " added. (Found " + drawable.Textures.Count + " textures). Total drawables: " + project.Drawables.Count);
         }
 
         public List<string> SearchForTextures(string filePath, int offsetNumber, string prefix, Drawable drawable) {

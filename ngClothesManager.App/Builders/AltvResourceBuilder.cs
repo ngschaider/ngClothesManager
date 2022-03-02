@@ -14,21 +14,21 @@ namespace ngClothesManager.App.Builders {
 
         #region Resource Props
 
-        protected override void OnFirstPropAddedToResource(Sex sex) {
+        protected override void OnFirstPropAddedToResource(Gender gender) {
             Directory.CreateDirectory(outputFolder + "/stream");
-            Directory.CreateDirectory(outputFolder + "/stream/ped_" + sex.ToString() + "_p.rpf");
-            Directory.CreateDirectory(outputFolder + "/stream/ped_" + sex.ToString() + "_p.rpf/" + sex.ToPrefix() + "freemode_01_p_" + sex.ToPrefix() + OutputName);
+            Directory.CreateDirectory(outputFolder + "/stream/ped_" + gender.ToString() + "_p.rpf");
+            Directory.CreateDirectory(outputFolder + "/stream/ped_" + gender.ToString() + "_p.rpf/" + gender.ToPrefix() + "freemode_01_p_" + gender.ToPrefix() + OutputName);
         }
 
-        protected override void CopyPropTextureToResource(Drawable drawable, Texture texture, Sex sex, string componentNumerics, char offsetLetter) {
-            string pedName = sex.ToPrefix() + "freemode_01_p_" + sex.ToPrefix() + OutputName;
-            string targetFilePath = outputFolder + "/stream/ped_" + sex.ToString() + "_p.rpf/" + pedName + "/" + drawable.Prefix + "_diff_" + componentNumerics + "_" + offsetLetter + ".ytd";
-            File.Copy(project.FolderPath + "/" + drawable.GetTexturePath(texture.Index), targetFilePath, true);
+        protected override void CopyPropTextureToResource(Drawable drawable, Texture texture, Gender gender, string componentNumerics, char offsetLetter) {
+            string pedName = gender.ToPrefix() + "freemode_01_p_" + gender.ToPrefix() + OutputName;
+            string targetFilePath = outputFolder + "/stream/ped_" + gender.ToString() + "_p.rpf/" + pedName + "/" + drawable.Prefix + "_diff_" + componentNumerics + "_" + offsetLetter + ".ytd";
+            File.Copy(project.FolderPath + "/" + drawable.GetTexturePath(texture.Id), targetFilePath, true);
         }
 
-        protected override void CopyPropModelToResource(Drawable drawable, Sex sex, string componentNumerics) {
-            string pedName = sex.ToPrefix() + "freemode_01_p_" + sex.ToPrefix() + OutputName;
-            string targetFilePath = outputFolder + "/stream/ped_" + sex.ToString() + "_p.rpf/" + pedName + "/" + drawable.Prefix + "_" + componentNumerics + ".ydd";
+        protected override void CopyPropModelToResource(Drawable drawable, Gender gender, string componentNumerics) {
+            string pedName = gender.ToPrefix() + "freemode_01_p_" + gender.ToPrefix() + OutputName;
+            string targetFilePath = outputFolder + "/stream/ped_" + gender.ToString() + "_p.rpf/" + pedName + "/" + drawable.Prefix + "_" + componentNumerics + ".ydd";
             File.Copy(project.FolderPath + "/" + drawable.ModelPath, targetFilePath, true);
         }
 
@@ -36,39 +36,39 @@ namespace ngClothesManager.App.Builders {
 
         #region Resource Drawables
 
-        protected override string GetDrawableYmtFilePath(Sex sex) {
-            return $"{outputFolder}/stream/ped_{sex}.rpf/{sex.ToPrefix()}freemode_01_{sex.ToPrefix()}{OutputName}.ymt";
+        protected override string GetDrawableYmtFilePath(Gender gender) {
+            return $"{outputFolder}/stream/ped_{gender}.rpf/{gender.ToPrefix()}freemode_01_{gender.ToPrefix()}{OutputName}.ymt";
         }
 
-        protected override void OnFirstDrawableAddedToResource(Sex sex) {
+        protected override void OnFirstDrawableAddedToResource(Gender gender) {
             Directory.CreateDirectory($"{outputFolder}/stream");
-            Directory.CreateDirectory($"{outputFolder}/stream/ped_{sex}.rpf");
-            Directory.CreateDirectory($"{outputFolder}/stream/ped_{sex}.rpf/{sex.ToPrefix()}freemode_01_{sex.ToPrefix()}{OutputName}");
+            Directory.CreateDirectory($"{outputFolder}/stream/ped_{gender}.rpf");
+            Directory.CreateDirectory($"{outputFolder}/stream/ped_{gender}.rpf/{gender.ToPrefix()}freemode_01_{gender.ToPrefix()}{OutputName}");
         }
 
-        protected override void CopyDrawableTextureToResource(Drawable drawable, Texture texture, Sex sex, string componentNumerics, string ytdSuffix, char offsetLetter) {
-            string targetFilePath = $"{outputFolder}/stream/ped_{sex}.rpf/{sex.ToPrefix()}freemode_01_{sex.ToPrefix()}{OutputName}/{drawable.Prefix}_diff_{componentNumerics}_{offsetLetter}_{ytdSuffix}.ytd";
-            File.Copy(project.FolderPath + "/" + drawable.GetTexturePath(texture.Index), targetFilePath);
+        protected override void CopyDrawableTextureToResource(Drawable drawable, Texture texture, Gender gender, string componentNumerics, string ytdSuffix, char offsetLetter) {
+            string targetFilePath = $"{outputFolder}/stream/ped_{gender}.rpf/{gender.ToPrefix()}freemode_01_{gender.ToPrefix()}{OutputName}/{drawable.Prefix}_diff_{componentNumerics}_{offsetLetter}_{ytdSuffix}.ytd";
+            File.Copy(project.FolderPath + "/" + drawable.GetTexturePath(texture.Id), targetFilePath);
         }
 
-        protected override void CopyDrawableModelToResource(Drawable drawable, Sex sex, string componentNumerics, string yddSuffix) {
-            string targetFilePath = $"{outputFolder}/stream/ped_{sex}.rpf/{sex.ToPrefix()}freemode_01_{sex.ToPrefix()}{OutputName}/{drawable.Prefix}_{componentNumerics}_{yddSuffix}.ydd";
+        protected override void CopyDrawableModelToResource(Drawable drawable, Gender gender, string componentNumerics, string yddSuffix) {
+            string targetFilePath = $"{outputFolder}/stream/ped_{gender}.rpf/{gender.ToPrefix()}freemode_01_{gender.ToPrefix()}{OutputName}/{drawable.Prefix}_{componentNumerics}_{yddSuffix}.ydd";
             File.Copy(project.FolderPath + "/" + drawable.ModelPath, targetFilePath);
         }
 
         #endregion
 
-        protected override void OnResourceDrawableDataFinished(Sex sex, bool isAnyComponentAdded, bool isAnyPropAdded) {
+        protected override void OnResourceDrawableDataFinished(Gender gender, bool isAnyComponentAdded, bool isAnyPropAdded) {
             if(isAnyPropAdded) {
-                _streamCfgIncludes.Add($"stream/ped_{sex}_p.rpf/*");
+                _streamCfgIncludes.Add($"stream/ped_{gender}_p.rpf/*");
             }
 
             if(isAnyComponentAdded || isAnyPropAdded) {
-                string shopMetaFilePath = outputFolder + "/stream/" + sex.ToPrefix() + "freemode_01_" + sex.ToPrefix() + OutputName + ".meta";
-                File.WriteAllText(shopMetaFilePath, GetShopMetaContent(sex));
+                string shopMetaFilePath = outputFolder + "/stream/" + gender.ToPrefix() + "freemode_01_" + gender.ToPrefix() + OutputName + ".meta";
+                File.WriteAllText(shopMetaFilePath, GetShopMetaContent(gender));
 
-                _streamCfgMetas.Add($"stream/{sex.ToPrefix()}freemode_01_{sex.ToPrefix()}{OutputName}.meta: SHOP_PED_APPAREL_META_FILE");
-                _streamCfgIncludes.Add($"stream/ped_{sex}.rpf/*");
+                _streamCfgMetas.Add($"stream/{gender.ToPrefix()}freemode_01_{gender.ToPrefix()}{OutputName}.meta: SHOP_PED_APPAREL_META_FILE");
+                _streamCfgIncludes.Add($"stream/ped_{gender}.rpf/*");
             }
         }
 

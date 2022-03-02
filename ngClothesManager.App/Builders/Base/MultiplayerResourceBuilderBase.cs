@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using RageLib.GTA5.ResourceWrappers.PC.Meta.Structures;
 using RageLib.Resources.GTA5.PC.GameFiles;
@@ -14,16 +15,16 @@ namespace ngClothesManager.App.Builders.Base {
         public override void BuildResource() {
             OnResourceBuildingStarted();
 
-            foreach(Sex sex in new Sex[] { Sex.Male, Sex.Female }) {
-                string ymtName = sex.ToPrefix() + OutputName;
+            foreach(Gender gender in Enum.GetValues(typeof(Gender))) {
+                string ymtName = gender.ToPrefix() + OutputName;
                 YmtPedDefinitionFile ymt = GetYmtPedDefinitionFile(ymtName, out var componentTextureBindings, out int[] componentIndexes, out int[] propIndexes);
 
                 bool isAnyComponentAdded = false;
                 bool isAnyPropAdded = false;
 
-                foreach(Drawable drawable in project.Drawables.Where(drawable => drawable.IsForSex(sex))) {
+                foreach(Drawable drawable in project.Drawables.Where(drawable => drawable.Gender == gender)) {
                     if(drawable.IsComponent) {
-                        if(drawable.Textures.Count <= 0) {
+                        if(drawable.IsEmpty) {
                             continue;
                         }
                             
@@ -35,20 +36,20 @@ namespace ngClothesManager.App.Builders.Base {
 
                         if(!isAnyComponentAdded) {
                             isAnyComponentAdded = true;
-                            OnFirstDrawableAddedToResource(sex);
+                            OnFirstDrawableAddedToResource(gender);
                         }
 
                         int currentComponentIndex = componentIndexes[componentTypeId]++;
 
                         string componentNumerics = currentComponentIndex.ToString().PadLeft(3, '0');
 
-                        CopyDrawableModelToResource(drawable, sex, componentNumerics, yddSuffix);
+                        CopyDrawableModelToResource(drawable, gender, componentNumerics, yddSuffix);
 
                         foreach(Texture texture in drawable.Textures) {
-                            CopyDrawableTextureToResource(drawable, texture, sex, componentNumerics, ytdSuffix, Utils.NumberToLetter(texture.Index));
+                            CopyDrawableTextureToResource(drawable, texture, gender, componentNumerics, ytdSuffix, Utils.NumberToLetter(texture.Id));
                         }
                     } else {
-                        if(drawable.Textures.Count <= 0) {
+                        if(drawable.IsEmpty) {
                             continue;
                         }
 
@@ -59,51 +60,51 @@ namespace ngClothesManager.App.Builders.Base {
 
                         if(!isAnyPropAdded) {
                             isAnyPropAdded = true;
-                            OnFirstPropAddedToResource(sex);
+                            OnFirstPropAddedToResource(gender);
                         }
 
                         int currentPropIndex = propIndexes[(byte)anchor]++;
                         string componentNumerics = currentPropIndex.ToString().PadLeft(3, '0');
 
-                        CopyPropModelToResource(drawable, sex, componentNumerics);
+                        CopyPropModelToResource(drawable, gender, componentNumerics);
 
                         foreach(Texture texture in drawable.Textures) {
-                            CopyPropTextureToResource(drawable, texture, sex, componentNumerics, Utils.NumberToLetter(texture.Index));
+                            CopyPropTextureToResource(drawable, texture, gender, componentNumerics, Utils.NumberToLetter(texture.Id));
                         }
                     }
                 }
 
                 if(isAnyComponentAdded) {
                     UpdateYmtComponentTextureBindings(componentTextureBindings, ymt);
-                    string drawableYmtFilePath = GetDrawableYmtFilePath(sex);
+                    string drawableYmtFilePath = GetDrawableYmtFilePath(gender);
                     ymt.Save(drawableYmtFilePath);
                 }
 
-                OnResourceDrawableDataFinished(sex, isAnyComponentAdded, isAnyPropAdded);
+                OnResourceDrawableDataFinished(gender, isAnyComponentAdded, isAnyPropAdded);
             }
 
             OnResourceBuildingFinished();
         }
 
-        protected abstract string GetDrawableYmtFilePath(Sex sex);
+        protected abstract string GetDrawableYmtFilePath(Gender gender);
 
-        protected abstract void CopyPropTextureToResource(Drawable drawable, Texture texture, Sex sex, string componentNumerics, char offsetLetter);
+        protected abstract void CopyPropTextureToResource(Drawable drawable, Texture texture, Gender gender, string componentNumerics, char offsetLetter);
 
-        protected abstract void CopyPropModelToResource(Drawable drawable, Sex sex, string componentNumerics);
+        protected abstract void CopyPropModelToResource(Drawable drawable, Gender gender, string componentNumerics);
 
-        protected abstract void CopyDrawableTextureToResource(Drawable drawable, Texture texture, Sex sex, string componentNumerics, string ytdSuffix, char offsetLetter);
+        protected abstract void CopyDrawableTextureToResource(Drawable drawable, Texture texture, Gender gender, string componentNumerics, string ytdSuffix, char offsetLetter);
 
-        protected abstract void CopyDrawableModelToResource(Drawable drawable, Sex sex, string componentNumerics, string yddSuffix);
+        protected abstract void CopyDrawableModelToResource(Drawable drawable, Gender gender, string componentNumerics, string yddSuffix);
 
-        protected virtual void OnResourceDrawableDataFinished(Sex sex, bool isAnyComponentAdded, bool isAnyPropAdded) {
-
-        }
-
-        protected virtual void OnFirstPropAddedToResource(Sex sex) {
+        protected virtual void OnResourceDrawableDataFinished(Gender gender, bool isAnyComponentAdded, bool isAnyPropAdded) {
 
         }
 
-        protected virtual void OnFirstDrawableAddedToResource(Sex sex) {
+        protected virtual void OnFirstPropAddedToResource(Gender gender) {
+
+        }
+
+        protected virtual void OnFirstDrawableAddedToResource(Gender gender) {
 
         }
 

@@ -16,21 +16,10 @@ namespace ngClothesManager.App {
 
         public readonly string Name;
 
-        
-
         private readonly List<string> filesToDelete = new List<string>();
         private readonly List<string> directoriesToDelete = new List<string>();
 
-        private ObservableCollection<Drawable> _drawables = new ObservableCollection<Drawable>();
-        public ObservableCollection<Drawable> Drawables {
-            get {
-                return _drawables;
-            }
-            private set {
-                _drawables = value;
-                OnPropertyChanged(nameof(Drawables));
-            }
-        }
+        public ObservableCollection<Drawable> Drawables { get; } = new ObservableCollection<Drawable>();
 
         private bool _needsSaving;
         public bool NeedsSaving {
@@ -49,11 +38,13 @@ namespace ngClothesManager.App {
             }
         }
 
-        private void OnPropertyChanged(string memberName) {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(memberName));
+        private void OnPropertyChanged(string propertyName) {
+            //Logger.Log("PropertyChanged: Project." + propertyName);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         private Project(string name, string folderPath) {
+            Drawables = new ObservableCollection<Drawable>();
             this.Name = name;
             this.FolderPath = folderPath;
 
@@ -124,7 +115,7 @@ namespace ngClothesManager.App {
         public int GetEmptyDrawableId() {
             int id = 0;
             while(true) {
-                if(Drawables.FirstOrDefault(drawable => drawable.Index == id) == null) {
+                if(Drawables.FirstOrDefault(drawable => drawable.Id == id) == null) {
                     return id;
                 }
                 id++;
@@ -137,6 +128,14 @@ namespace ngClothesManager.App {
             FileInfo fileInfo = new FileInfo(targetPath);
             fileInfo.Directory.Create(); // create all needed folders
             File.Copy(sourcePath, targetPath, true);
+        }
+
+        public void AddFileFromByteArray(byte[] bytes, string relTargetPath) {
+            NeedsSaving = true;
+            string targetPath = FolderPath + "/" + relTargetPath;
+            FileInfo fileInfo = new FileInfo(targetPath);
+            fileInfo.Directory.Create(); // create all needed folders
+            File.WriteAllBytes(FolderPath + "/" + relTargetPath, bytes);
         }
 
         public void RemoveFile(string relPath) {
@@ -152,14 +151,14 @@ namespace ngClothesManager.App {
             NeedsSaving = true;
             Drawables.Remove(drawable);
 
-            directoriesToDelete.Add(drawable.DrawableType.ToIdentifier() + "/" + drawable.Index);
+            directoriesToDelete.Add(drawable.DrawableType.ToIdentifier() + "/" + drawable.Id);
             Logger.Log("Removed " + drawable.Name + ". Total drawables: " + Drawables.Count);
         }
 
         public void RemoveTexture(Drawable drawable, Texture texture) {
             NeedsSaving = true;
             drawable.Textures.Remove(texture);
-            string texPath = drawable.GetTexturePath(texture.Index);
+            string texPath = drawable.GetTexturePath(texture.Id);
             RemoveFile(texPath);
 
             Logger.Log("Removed " + texture.Name + " from " + drawable.Name + ". Textures Count: " + drawable.Textures.Count);

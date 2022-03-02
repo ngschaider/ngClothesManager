@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -9,14 +10,16 @@ using System.Runtime.CompilerServices;
 namespace ngClothesManager.App {
     public class Drawable : INotifyPropertyChanged {
 
-        private int _index;
-        public int Index {
+        #region Properties
+
+        private int _id;
+        public int Id {
             get {
-                return _index;
+                return _id;
             }
             set {
-                _index = value;
-                OnPropertyChanged(nameof(Index));
+                _id = value;
+                OnPropertyChanged(nameof(Id));
                 OnPropertyChanged(nameof(DisplayName));
             }
         }
@@ -55,72 +58,17 @@ namespace ngClothesManager.App {
             }
         }
 
-        private ObservableCollection<Texture> _textures = new ObservableCollection<Texture>();
-
-        public ObservableCollection<Texture> Textures {
-            get {
-                return _textures;
-            }
-            set {
-                _textures = value;
-                OnPropertyChanged(nameof(Textures));
-            }
-        }
-
-        private bool _isMale;
-
-        public bool IsMale {
-            get {
-                return _isMale;
-            }
-            set {
-                _isMale = value;
-                OnPropertyChanged(nameof(IsMale));
-            }
-        }
-
-        private bool _isFemale;
-
-        public bool IsFemale {
-            get {
-                return _isFemale;
-            }
-            set {
-                _isFemale = value;
-                OnPropertyChanged(nameof(IsFemale));
-            }
-        }
-
-        public bool IsForSex(Sex sex) {
-            switch(sex) {
-                case Sex.Male:
-                    return IsMale;
-                case Sex.Female:
-                    return IsFemale;
-                default:
-                    throw new ArgumentException();
-            }
-        }
-
-        public string ModelPath {
-            get {
-                return DrawableType.ToIdentifier() + "/" + Index + "/model.ydd";
-            }
-        }
+        public ObservableCollection<Texture> Textures { get; } = new ObservableCollection<Texture>();
 
         private string _name;
         public string Name {
-            get => _name;
+            get {
+                return _name;
+            }
             set {
                 _name = value;
                 OnPropertyChanged(nameof(Name));
                 OnPropertyChanged(nameof(DisplayName));
-            }
-        }
-
-        public string DisplayName {
-            get {
-                return Name + " (ID " + Index + ")";
             }
         }
 
@@ -135,37 +83,78 @@ namespace ngClothesManager.App {
             }
         }
 
+        private Gender _gender;
+        public Gender Gender {
+            get {
+                return _gender;
+            }
+            set {
+                _gender = value;
+                OnPropertyChanged(nameof(Gender));
+            }
+        }
+
+        [JsonIgnore]
+        public string ModelPath {
+            get {
+                return DrawableType.ToIdentifier() + "/" + Id + "/model.ydd";
+            }
+        }
+
+        [JsonIgnore]
+        public string DisplayName {
+            get {
+                if(IsEmpty) {
+                    return Name + "(ID " + Id + ") (Empty)";
+                } else {
+                    return Name + " (ID " + Id + ")";
+                }
+            }
+        }
+
+        [JsonIgnore]
+        public bool IsEmpty {
+            get {
+                return Textures.Count == 0;
+            }
+        }
+
+        #endregion
+
         private Drawable() {
             // Needed for deserialization
         }
 
-        public Drawable(int index, DrawableType drawableType, Sex sex, string suffix) {
-            Index = index;
+        public Drawable(int index, DrawableType drawableType, Gender gender) : this(index, drawableType, gender, "") {
+        }
+
+        public Drawable(int index, DrawableType drawableType, Gender gender, string suffix) {
+            Id = index;
             DrawableType = drawableType;
-            Name = DrawableType + "" + Index;
-            if(sex == Sex.Male) {
-                IsMale = true;
-            } else if(sex == Sex.Female) {
-                IsFemale = true;
-            }
+            Name = DrawableType.ToString();
+            Gender = gender;
             Suffix = suffix;
         }
 
         public int GetEmptyTextureIndex() {
             int index = 0;
             while(true) {
-                if(Textures.FirstOrDefault(texture => texture.Index == index) == null) {
+                if(Textures.FirstOrDefault(texture => texture.Id == index) == null) {
                     return index;
                 }
                 index++;
             }
-        }        
+        }
+
+        #region INotifyPropertyChanged
 
         public event PropertyChangedEventHandler PropertyChanged;
-        private void OnPropertyChanged([CallerMemberName] string propertyName = null) {
-            var handler = PropertyChanged;
-            handler?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        private void OnPropertyChanged(string propertyName = null) {
+            //Logger.Log("PropertChanged: Drawable." + propertyName);
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        #endregion
 
         public bool IsComponent {
             get {
@@ -202,7 +191,7 @@ namespace ngClothesManager.App {
         }
 
         public string GetTexturePath(int textureIndex) {
-            return DrawableType.ToIdentifier() + "/" + Index + "/tex" + textureIndex + ".ytd";
+            return DrawableType.ToIdentifier() + "/" + Id + "/tex" + textureIndex + ".ytd";
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using ngClothesManager.App.Builders.Base;
@@ -179,15 +180,15 @@ namespace ngClothesManager.App.Builders {
                 bool hasMaleProps = false;
                 bool hasFemaleProps = false;
 
-                foreach(Sex sex in new Sex[] { Sex.Male, Sex.Female }) {
-                    YmtPedDefinitionFile ymt = GetYmtPedDefinitionFile(sex.ToPrefix() + OutputName, out var componentTextureBindings, out int[] componentIndexes, out var propIndexes);
+                foreach(Gender gender in Enum.GetValues(typeof(Gender))) {
+                    YmtPedDefinitionFile ymt = GetYmtPedDefinitionFile(gender.ToPrefix() + OutputName, out var componentTextureBindings, out int[] componentIndexes, out var propIndexes);
 
                     bool isAnyComponentAdded = false;
                     bool isAnyPropAdded = false;
 
                     foreach(Drawable drawable in project.Drawables) {
                         if(drawable.IsComponent) {
-                            if(drawable.Textures.Count <= 0 || !drawable.IsForSex(sex)) {
+                            if(drawable.Textures.Count <= 0 || drawable.Gender != gender) {
                                 continue;
                             }
 
@@ -202,12 +203,12 @@ namespace ngClothesManager.App.Builders {
 
                                 var ms = new MemoryStream();
 
-                                string sexStr = sex == Sex.Male ? "male" : "female";
+                                string genderStr = gender == Gender.Male ? "male" : "female";
 
-                                currComponentRpf = RageArchiveWrapper7.Create(ms, OutputName + "_" + sexStr + ".rpf");
+                                currComponentRpf = RageArchiveWrapper7.Create(ms, OutputName + "_" + genderStr + ".rpf");
                                 currComponentRpf.archive_.Encryption = RageArchiveEncryption7.NG;
                                 currComponentDir = currComponentRpf.Root.CreateDirectory();
-                                currComponentDir.Name = sex.ToPrefix() + "freemode_01_" + sex.ToPrefix() + project.Name;
+                                currComponentDir.Name = gender.ToPrefix() + "freemode_01_" + gender.ToPrefix() + project.Name;
                             }
 
                             int currentComponentIndex = componentIndexes[componentTypeId]++;
@@ -221,11 +222,11 @@ namespace ngClothesManager.App.Builders {
 
                             foreach(Texture texture in drawable.Textures) {
                                 resource = currComponentDir.CreateResourceFile();
-                                resource.Name = prefix + "_diff_" + componentNumerics + "_" + Utils.NumberToLetter(texture.Index) + "_" + ytdPostfix + ".ytd";
-                                resource.Import(drawable.GetTexturePath(texture.Index));
+                                resource.Name = prefix + "_diff_" + componentNumerics + "_" + Utils.NumberToLetter(texture.Id) + "_" + ytdPostfix + ".ytd";
+                                resource.Import(drawable.GetTexturePath(texture.Id));
                             }
                         } else {
-                            if(drawable.Textures.Count <= 0 || !drawable.IsForSex(sex)) {
+                            if(drawable.Textures.Count <= 0 || drawable.Gender != gender) {
                                 continue;
                             }
 
@@ -239,10 +240,10 @@ namespace ngClothesManager.App.Builders {
 
                                 var ms = new MemoryStream();
 
-                                currPropRpf = RageArchiveWrapper7.Create(ms, OutputName + "_" + sex.ToString() + "_p.rpf");
+                                currPropRpf = RageArchiveWrapper7.Create(ms, OutputName + "_" + gender.ToString() + "_p.rpf");
                                 currPropRpf.archive_.Encryption = RageArchiveEncryption7.NG;
                                 currPropDir = currPropRpf.Root.CreateDirectory();
-                                currPropDir.Name = sex.ToPrefix() + "freemode_01_p_" + sex.ToPrefix() + project.Name;
+                                currPropDir.Name = gender.ToPrefix() + "freemode_01_p_" + gender.ToPrefix() + project.Name;
                             }
 
                             int currentPropIndex = propIndexes[(byte)anchor]++;
@@ -250,25 +251,23 @@ namespace ngClothesManager.App.Builders {
                             string componentNumerics = currentPropIndex.ToString().PadLeft(3, '0');
                             string prefix = drawable.Prefix;
 
-                            //drawable.SetComponentNumerics(componentNumerics, currentPropIndex);
-
                             var resource = currPropDir.CreateResourceFile();
                             resource.Name = prefix + "_" + componentNumerics + ".ydd";
                             resource.Import(drawable.ModelPath);
 
                             foreach(Texture texture in drawable.Textures) {
                                 resource = currPropDir.CreateResourceFile();
-                                resource.Name = prefix + "_diff_" + drawable.Index + "_" + Utils.NumberToLetter(texture.Index) + ".ytd";
-                                resource.Import(drawable.GetTexturePath(texture.Index));
+                                resource.Name = prefix + "_diff_" + drawable.Id + "_" + Utils.NumberToLetter(texture.Id) + ".ytd";
+                                resource.Import(drawable.GetTexturePath(texture.Id));
                             }
                             
                         }
                     }
 
                     if(isAnyComponentAdded) {
-                        if(sex == Sex.Male) {
+                        if(gender == Gender.Male) {
                             hasMale = true;
-                        } else if(sex == Sex.Female) {
+                        } else if(gender == Gender.Female) {
                             hasFemale = true;
                         }
 
@@ -276,31 +275,31 @@ namespace ngClothesManager.App.Builders {
                     }
 
                     if(isAnyComponentAdded || isAnyPropAdded) {
-                        using(MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(GetShopMetaContent(sex)))) {
+                        using(MemoryStream stream = new MemoryStream(Encoding.UTF8.GetBytes(GetShopMetaContent(gender)))) {
                             var binFile = dataDir.CreateBinaryFile();
-                            binFile.Name = sex.ToPrefix() + "freemode_01_" + sex.ToPrefix() + project.Name + ".meta";
+                            binFile.Name = gender.ToPrefix() + "freemode_01_" + gender.ToPrefix() + project.Name + ".meta";
                             binFile.Import(stream);
                         }
                         currComponentRpf.Flush();
 
                         var binRpfFile = cdimagesDir.CreateBinaryFile();
-                        binRpfFile.Name = OutputName + "_" + sex.ToString() + ".rpf";
+                        binRpfFile.Name = OutputName + "_" + gender.ToString() + ".rpf";
                         binRpfFile.Import(currComponentRpf.archive_.BaseStream);
 
                         currComponentRpf.Dispose();
                     }
 
                     if(isAnyPropAdded) {
-                        if(sex == Sex.Male) {
+                        if(gender == Gender.Male) {
                             hasMaleProps = true;
-                        } else if(sex == Sex.Female) {
+                        } else if(gender == Gender.Female) {
                             hasFemaleProps = true;
                         }
 
                         currPropRpf.Flush();
 
                         var binRpfFile = cdimagesDir.CreateBinaryFile();
-                        binRpfFile.Name = OutputName + "_" + sex.ToString() + "_p.rpf";
+                        binRpfFile.Name = OutputName + "_" + gender.ToString() + "_p.rpf";
                         binRpfFile.Import(currPropRpf.archive_.BaseStream);
 
                         currPropRpf.Dispose();

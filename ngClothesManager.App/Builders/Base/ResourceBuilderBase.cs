@@ -16,10 +16,10 @@ namespace ngClothesManager.App.Builders.Base {
             this.outputFolder = outputFolder;
         }
 
-        protected string GetShopMetaContent(Sex targetSex) {
-            string targetName = targetSex == Sex.Male ? "mp_m_freemode_01" : "mp_f_freemode_01";
-            string dlcName = (targetSex == Sex.Male ? "mp_m_" : "mp_f_") + OutputName;
-            string character = targetSex == Sex.Male ? "SCR_CHAR_MULTIPLAYER" : "SCR_CHAR_MULTIPLAYER_F";
+        protected string GetShopMetaContent(Gender gender) {
+            string targetName = gender == Gender.Male ? "mp_m_freemode_01" : "mp_f_freemode_01";
+            string dlcName = (gender == Gender.Male ? "mp_m_" : "mp_f_") + OutputName;
+            string character = gender == Gender.Male ? "SCR_CHAR_MULTIPLAYER" : "SCR_CHAR_MULTIPLAYER_F";
             return $@"<?xml version=""1.0"" encoding=""UTF-8""?>
 <ShopPedApparel>
 	<pedName>{targetName}</pedName>

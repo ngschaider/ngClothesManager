@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ngClothesManager.App.Builders;
+using ngClothesManager.App.Builders.Base;
+using System;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
@@ -8,11 +10,12 @@ namespace ngClothesManager.App {
 
         public string OutputFolder = "";
 
-        public ProjectBuildWindow() {
-            InitializeComponent();
-        }
+        private readonly Project project;
 
-        public static Action<ResourceType, string> OnExecuteBuild;
+        public ProjectBuildWindow(Project project) {
+            InitializeComponent();
+            this.project = project;
+        }
 
         private void BuildButton_Click(object sender, RoutedEventArgs e) {
             ResourceType resType = ResourceType.AltV;
@@ -29,7 +32,19 @@ namespace ngClothesManager.App {
                 return;
             }
 
-            OnExecuteBuild?.Invoke(resType, OutputFolder);
+            ResourceBuilderBase builder;
+
+            if(resType == ResourceType.FiveM) {
+                builder = new FivemResourceBuilder(project, OutputFolder);
+            } else if(resType == ResourceType.AltV) {
+                builder = new AltvResourceBuilder(project, OutputFolder);
+            } else {
+                builder = new SingleplayerResourceBuilder(project, OutputFolder);
+            }
+            builder.OutputName = project.Name;
+
+            builder.BuildResource();
+            Logger.Log("Resource built!");
         }
 
         private bool FilePathHasInvalidChars(string path) {

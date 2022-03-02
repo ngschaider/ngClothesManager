@@ -26,7 +26,7 @@ namespace ngClothesManager.App {
             get {
                 return _project;
             }
-            set {
+            private set {
                 _project = value;
                 OnPropertyChanged(nameof(Project));
             }
@@ -56,14 +56,14 @@ namespace ngClothesManager.App {
             }
         }
 
-        private ObservableCollection<DrawableListEntry> _drawablesList = new ObservableCollection<DrawableListEntry>();
-        public ObservableCollection<DrawableListEntry> DrawablesList {
+        private DrawableList _drawableList;
+        public DrawableList DrawableList {
             get {
-                return _drawablesList;
+                return _drawableList;
             }
-            private set {
-                _drawablesList = value;
-                OnPropertyChanged(nameof(DrawablesList));
+            set {
+                _drawableList = value;
+                OnPropertyChanged(nameof(DrawableList));
             }
         }
 
@@ -86,6 +86,7 @@ namespace ngClothesManager.App {
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void OnPropertyChanged(string propertyName) {
+            //Logger.Log("PropertyChanged: MainWindow." + propertyName);
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
@@ -97,14 +98,13 @@ namespace ngClothesManager.App {
 
             Logger.OnLogEntryAdded += OnLogEntryAdded;
 
-        }
+            PropertyChanged += (object sender, PropertyChangedEventArgs e) => {
+                if(e.PropertyName == nameof(Project)) {
+                    DrawableList?.OnProjectChanged(Project);
+                }
+            };
 
-        private void OnDrawablesListChanged(object sender, NotifyCollectionChangedEventArgs e) {
-            
-        }
-
-        private void OnDrawableChanged(object sender, PropertyChangedEventArgs e) {
-            RefreshDrawablesList();
+            DrawableList = new DrawableList();
         }
 
         #region Events
@@ -144,8 +144,8 @@ namespace ngClothesManager.App {
         }
 
         private void SelectedDrawableListEntryChanged(object sender, RoutedEventArgs e) {
-            DrawableListEntry entry = (DrawableListEntry)drawablesList.SelectedItem;
-            if(entry != null && entry.Drawable != null) {
+            DrawableListEntry entry = (DrawableListEntry)elDrawableList.SelectedItem;
+            if(entry?.Type == DrawableListEntry.EntryType.Drawable && entry?.Drawable != null) {
                 SelectedDrawable = entry.Drawable;
             } else {
                 SelectedDrawable = null;
@@ -162,6 +162,14 @@ namespace ngClothesManager.App {
         private void LogsButton_Click(object sender, RoutedEventArgs e) {
             logWindow = new LogWindow();
             logWindow.Show();
+        }
+
+        private void GenerateEmptySlotsCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = Project != null;
+        }
+        private void GenerateEmptySlotsCommand_Executed(object sender, ExecutedRoutedEventArgs e) {
+            GenerateEmptySlotsWindow win = new GenerateEmptySlotsWindow(Project);
+            win.ShowDialog();
         }
 
         private void FindDuplicatesCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
@@ -192,10 +200,10 @@ namespace ngClothesManager.App {
                         string path1 = Project.FolderPath + "/" + a.ModelPath;
                         string path2 = Project.FolderPath + "/" + b.ModelPath;
 
-                        if(a.Index < b.Index && Utils.IsFileEqual(path1, path2)) {
+                        if(a.Id < b.Id && Utils.IsFileEqual(path1, path2) && a.Gender == b.Gender) {
                             duplicates++;
                             this.Dispatcher.Invoke(() => {
-                                Logger.Log("Duplicate: " + a.ModelPath + " (ID " + a.Index + ") | " + b.ModelPath + "(ID " + b.Index + ")");
+                                Logger.Log("Duplicate: " + a.ModelPath + " (ID " + a.Id + ") | " + b.ModelPath + "(ID " + b.Id + ")");
                             });
                         }
                     }
@@ -263,6 +271,7 @@ namespace ngClothesManager.App {
         private void CloseCommand_Executed(object sender, ExecutedRoutedEventArgs e) {
             if(AskAndSaveIfNeeded()) {
                 Project = null;
+                Logger.Log("Project closed.");
             }
         }
 
@@ -279,14 +288,41 @@ namespace ngClothesManager.App {
             e.CanExecute = Project != null;
         }
         private void AddMaleDrawablesCommand_Executed(object sender, ExecutedRoutedEventArgs e) {
-            AddDrawables(Sex.Male);
+            AddDrawables(Gender.Male);
         }
 
         private void AddFemaleDrawablesCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = Project != null;
         }
         private void AddFemaleDrawablesCommand_Executed(object sender, ExecutedRoutedEventArgs e) {
-            AddDrawables(Sex.Female);
+            AddDrawables(Gender.Female);
+        }
+
+        private void ImportFromFivemCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = Project != null;
+        }
+        private void ImportFromFivemCommand_Executed(object sender, ExecutedRoutedEventArgs e) {
+            if(Project == null) {
+                return;
+            }
+
+            OpenFileDialog openFileDialog = new OpenFileDialog {
+                CheckFileExists = true,
+                Filter = "Drawables geometry (*.ydd)|*.ydd",
+                FilterIndex = 1,
+                DefaultExt = "ydd",
+                Multiselect = true,
+                Title = "Adding drawables",
+            };
+
+            if(openFileDialog.ShowDialog() != true) {
+                return;
+            }
+
+            DrawableImporter importer = new DrawableImporter(Project);
+            foreach(string filePath in openFileDialog.FileNames) {
+                importer.Import(filePath);
+            }
         }
 
         private void RemoveSelectedDrawableCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
@@ -304,69 +340,11 @@ namespace ngClothesManager.App {
             e.CanExecute = Project != null && Project.Drawables.Count > 0;
         }
         private void BuildProjectCommand_Executed(object sender, ExecutedRoutedEventArgs e) {
-            ProjectBuildWindow = new ProjectBuildWindow();
-            ProjectBuildWindow.Show();
-
-            ProjectBuildWindow.OnExecuteBuild += (resType, outputFolder) => {
-                ResourceBuilderBase builder;
-
-                if(resType == ResourceType.FiveM) {
-                    builder = new FivemResourceBuilder(Project, outputFolder);
-                } else if(resType == ResourceType.AltV) {
-                    builder = new AltvResourceBuilder(Project, outputFolder);
-                } else {
-                    builder = new SingleplayerResourceBuilder(Project, outputFolder);
-                }
-
-                builder.OutputName = Project.Name;
-
-                builder.BuildResource();
-                Logger.Log("Resource built!");
-            };
+            ProjectBuildWindow = new ProjectBuildWindow(Project);
+            ProjectBuildWindow.ShowDialog();
         }
 
         #endregion
-
-        private void RefreshDrawablesList() {
-            DrawablesList.Clear();
-
-            DrawableListEntry maleEntry = new DrawableListEntry() {
-                Sex = Sex.Male,
-            };
-            DrawablesList.Add(maleEntry);
-
-            DrawableListEntry femaleEntry = new DrawableListEntry() {
-                Sex = Sex.Female,
-            };
-            DrawablesList.Add(femaleEntry);
-
-            foreach(DrawableType drawableType in Enum.GetValues(typeof(DrawableType))) {
-                Logger.Log("adding " + drawableType);
-                maleEntry.Children.Add(new DrawableListEntry() {
-                    DrawableType = drawableType,
-                });
-                femaleEntry.Children.Add(new DrawableListEntry() {
-                    DrawableType = drawableType,
-                });
-            }
-
-            foreach(DrawableListEntry sexEntry in DrawablesList) {
-                foreach(Drawable drawable in Project.Drawables) {
-                    if(drawable.IsForSex(sexEntry.Sex)) {
-                        foreach(DrawableListEntry drawableEntry in sexEntry.Children) {
-                            if(drawableEntry.DrawableType == drawable.DrawableType) {
-                                drawableEntry.Children.Add(new DrawableListEntry() {
-                                    Drawable = drawable
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-
-            Logger.Log("recreating list");
-        }
-
 
         private string AskForProjectFile() {
             OpenFileDialog openFileDialog = new OpenFileDialog {
@@ -399,7 +377,7 @@ namespace ngClothesManager.App {
             return true;
         }
 
-        public void AddDrawables(Sex sex) {
+        public void AddDrawables(Gender gender) {
             if(Project == null) {
                 return;
             }
@@ -410,7 +388,7 @@ namespace ngClothesManager.App {
                 FilterIndex = 1,
                 DefaultExt = "ydd",
                 Multiselect = true,
-                Title = "Adding " + (sex == Sex.Male ? "male" : "female") + " drawables",
+                Title = "Adding " + (gender == Gender.Male ? "male" : "female") + " drawables",
             };
 
             if(openFileDialog.ShowDialog() != true) {
@@ -419,7 +397,7 @@ namespace ngClothesManager.App {
 
             DrawableImporter importer = new DrawableImporter(Project);
             foreach(string filePath in openFileDialog.FileNames) {
-                importer.Import(filePath, sex);
+                importer.Import(filePath, gender);
             }
         }
     }

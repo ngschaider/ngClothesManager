@@ -3,21 +3,27 @@ using System.ComponentModel;
 
 namespace ngClothesManager.App {
     public class DrawableListEntry : INotifyPropertyChanged {
+        public enum EntryType {
+            DrawableType,
+            Gender,
+            Drawable
+        }
+
+        public EntryType Type;
         public Drawable Drawable;
-        public DrawableType DrawableType = DrawableType.None;
-        public Sex Sex = Sex.None;
+        public DrawableType DrawableType;
+        public Gender Gender;
 
         public string Label {
             get {
-                if(DrawableType != DrawableType.None) {
-                    string ret = DrawableType.ToString();
-                    if(DrawableType != DrawableType.Unkown) {
-                        ret += " (" + DrawableType.ToIdentifier() + ")";
-                    }
-                    return ret;
+                if(Type == EntryType.Drawable) {
+                    return Drawable.DisplayName;
+                } else if(Type == EntryType.Gender) {
+                    return Gender.ToString();
+                } else if(Type == EntryType.DrawableType) {
+                    return DrawableType.ToString() + " (" + DrawableType.ToIdentifier() + ")";
                 }
-
-                return Drawable != null ? Drawable.DisplayName : (DrawableType != DrawableType.None ? DrawableType.ToString() : Sex.ToString());
+                return nameof(DrawableListEntry) + " Error!";
             }
         }
 

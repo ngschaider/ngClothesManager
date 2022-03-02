@@ -4,6 +4,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ngClothesManager.App"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="ngClothesManager" Height="450" Width="850" Icon="icon_alpha.ico">
 
@@ -16,9 +17,21 @@
         <CommandBinding Command="{x:Static local:Commands.AddMaleDrawables}" CanExecute="AddMaleDrawablesCommand_CanExecute" Executed="AddMaleDrawablesCommand_Executed" />
         <CommandBinding Command="{x:Static local:Commands.AddFemaleDrawables}" CanExecute="AddFemaleDrawablesCommand_CanExecute" Executed="AddFemaleDrawablesCommand_Executed" />
         <CommandBinding Command="{x:Static local:Commands.RemoveSelectedDrawable}" CanExecute="RemoveSelectedDrawableCommand_CanExecute" Executed="RemoveSelectedDrawableCommand_Executed" />
+        <CommandBinding Command="{x:Static local:Commands.GenerateEmptySlots}" CanExecute="GenerateEmptySlotsCommand_CanExecute" Executed="GenerateEmptySlotsCommand_Executed" />
         <CommandBinding Command="{x:Static local:Commands.FindDuplicates}" CanExecute="FindDuplicatesCommand_CanExecute" Executed="FindDuplicatesCommand_Executed" />
         <CommandBinding Command="{x:Static local:Commands.BuildProject}" CanExecute="BuildProjectCommand_CanExecute" Executed="BuildProjectCommand_Executed" />
+        <CommandBinding Command="{x:Static local:Commands.ImportFromFivem}" CanExecute="ImportFromFivemCommand_CanExecute" Executed="ImportFromFivemCommand_Executed" />
     </Window.CommandBindings>
+
+    <Window.Resources>
+        <ObjectDataProvider x:Key="genderEnum" MethodName="GetNames" ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="local:Gender" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+
+        <local:EnumToStringConverter x:Key="enumToStringConverter" />
+    </Window.Resources>
 
     <DockPanel>
         <Menu Height="20" VerticalAlignment="Top" DockPanel.Dock="Top">
@@ -30,6 +43,8 @@
                 <MenuItem Header="Exit" Command="{x:Static local:Commands.Exit}" />
             </MenuItem>
             <MenuItem Header="_Tools">
+                <MenuItem Header="Import from FiveM" Command="{x:Static local:Commands.ImportFromFivem}" />
+                <MenuItem Header="Generate empty slots" Command="{x:Static local:Commands.GenerateEmptySlots}" />
                 <MenuItem Header="Find Duplicates" Command="{x:Static local:Commands.FindDuplicates}" />
                 <MenuItem Header="Build Project" Command="{x:Static local:Commands.BuildProject}" />
             </MenuItem>
@@ -58,7 +73,7 @@
                         <MenuItem Header="Remove" Command="{x:Static local:Commands.RemoveSelectedDrawable}" />
                     </Menu>
 
-                    <TreeView x:Name="drawablesList" ItemsSource="{Binding DrawablesList}" SelectedItemChanged="SelectedDrawableListEntryChanged">
+                    <TreeView x:Name="elDrawableList" BorderBrush="{x:Null}" ItemsSource="{Binding DrawableList.List}" SelectedItemChanged="SelectedDrawableListEntryChanged">
                         <TreeView.Resources>
                             <HierarchicalDataTemplate DataType="{x:Type local:DrawableListEntry}" ItemsSource="{Binding Children}">
                                 <TextBlock Text="{Binding Label}" />
@@ -70,8 +85,8 @@
 
             <GridSplitter Grid.Column="1" HorizontalAlignment="Stretch" />
 
-            <GroupBox x:Name="componentEditBox" Header="Drawable edit" Grid.Column="2" Margin="5" Visibility="{Binding ComponentEditBoxVisibility}">
-                <Grid Name="componentEditGrid">
+            <GroupBox Header="Component edit" Grid.Column="2" Margin="5" Visibility="{Binding ComponentEditBoxVisibility}">
+                <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="120" />
@@ -95,10 +110,8 @@
                     </GroupBox>
 
                     <GroupBox Header="Gender" Grid.Column="1" Grid.Row="1">
-                        <StackPanel Orientation="Vertical">
-                            <CheckBox Content="Male" IsChecked="{Binding SelectedDrawable.IsMale}" />
-                            <CheckBox Content="Female" IsChecked="{Binding SelectedDrawable.IsFemale}" />
-                        </StackPanel>
+                        <ComboBox ItemsSource="{Binding Source={StaticResource genderEnum}}" 
+                                  SelectedItem="{Binding SelectedDrawable.Gender, Converter={StaticResource enumToStringConverter}, Mode=TwoWay}" />
                     </GroupBox>
 
                     <GroupBox Header="Textures" Grid.Column="0" Grid.Row="2">
@@ -106,13 +119,13 @@
                             <ListBox Margin="0, 0, 0, 18" ItemsSource="{Binding SelectedDrawable.Textures}" SelectedItem="{Binding SelectedTexture}">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
-                                        <TextBlock Text="{Binding Name}" />
+                                        <TextBlock Text="{Binding DisplayName}" />
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
                             </ListBox>
                             <Menu VerticalAlignment="Bottom">
-                                <MenuItem x:Name="addTexture" Header="Add" Click="AddTexture_Click"/>
-                                <MenuItem x:Name="removeTexture" Header="Remove" Click="RemoveTexture_Click"/>
+                                <MenuItem Header="Add" Click="AddTexture_Click"/>
+                                <MenuItem Header="Remove" Click="RemoveTexture_Click"/>
                             </Menu>
                         </Grid>
                     </GroupBox>
@@ -130,8 +143,8 @@
             </GroupBox>
 
 
-            <GroupBox x:Name="pedPropEditGroupBox" Header="Ped prop edit" Grid.Column="2" Margin="5" Visibility="{Binding PropEditBoxVisibility}">
-                <Grid x:Name="pedPropEditGrid">
+            <GroupBox Header="Prop edit" Grid.Column="2" Margin="5" Visibility="{Binding PropEditBoxVisibility}">
+                <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="120" />
@@ -142,14 +155,14 @@
                     </Grid.RowDefinitions>
 
                     <GroupBox Header="Name" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="1" Margin="5,0,5,5">
-                        <TextBox TextWrapping="Wrap" VerticalAlignment="Top" BorderBrush="{x:Null}" Text="{Binding SelectedDrawable.Name}" />
+                        <TextBox TextWrapping="Wrap" VerticalAlignment="Top" BorderBrush="{x:Null}">
+                            <Binding Path="SelectedDrawable.Name" UpdateSourceTrigger="PropertyChanged" />
+                        </TextBox>
                     </GroupBox>
 
                     <GroupBox Header="Gender" Grid.Column="1" Grid.Row="0">
-                        <StackPanel Orientation="Vertical">
-                            <CheckBox Content="Male" IsChecked="{Binding SelectedDrawable.IsMale}" />
-                            <CheckBox Content="Female" IsChecked="{Binding SelectedDrawable.IsFemale}" />
-                        </StackPanel>
+                        <ComboBox ItemsSource="{Binding Source={StaticResource genderEnum}}" 
+                                  SelectedItem="{Binding SelectedDrawable.Gender, Converter={StaticResource enumToStringConverter}, Mode=TwoWay}" />
                     </GroupBox>
 
                     <GroupBox Header="Textures" Grid.Row="1" Grid.Column="0" Margin="5">

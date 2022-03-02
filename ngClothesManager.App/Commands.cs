@@ -32,5 +32,12 @@ namespace ngClothesManager.App {
             new KeyGesture(Key.B, ModifierKeys.Control | ModifierKeys.Shift)
         });
 
+        public static readonly RoutedUICommand GenerateEmptySlots = new RoutedUICommand("Generate empty slots", "GenerateEmptySlots", typeof(Commands), new InputGestureCollection() {
+            new KeyGesture(Key.G, ModifierKeys.Control)
+        });
+
+        public static readonly RoutedUICommand ImportFromFivem = new RoutedUICommand("Import from FiveM", "ImportFromFivem", typeof(Commands), new InputGestureCollection() {
+            
+        });
     }
 }
